@@ -1,0 +1,58 @@
+# ============================================================
+# render.yaml — Render deployment config for KeyMart Global
+# Backend (FastAPI) service definition
+# ============================================================
+
+services:
+  - type: web
+    name: keymart-global-backend
+    runtime: python
+    rootDir: backend              # ← points Render to the backend/ subfolder
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    plan: free                    # Change to "starter" for production
+
+    # ── Environment Variables ─────────────────────────────────
+    # Set these in the Render dashboard under Environment tab.
+    # DO NOT hardcode secrets here.
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.0"
+
+      - key: GOOGLE_SHEET_ID
+        sync: false               # Set manually in Render dashboard
+
+      - key: GOOGLE_TYPE
+        value: service_account
+
+      - key: GOOGLE_PROJECT_ID
+        sync: false
+
+      - key: GOOGLE_PRIVATE_KEY_ID
+        sync: false
+
+      - key: GOOGLE_PRIVATE_KEY
+        sync: false               # Paste the full key in Render dashboard
+
+      - key: GOOGLE_CLIENT_EMAIL
+        sync: false
+
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+
+      - key: GOOGLE_TOKEN_URI
+        value: https://oauth2.googleapis.com/token
+
+      - key: WHATSAPP_API_TOKEN
+        sync: false
+
+      - key: WHATSAPP_PHONE_ID
+        sync: false
+
+      - key: ADMIN_WHATSAPP_NUMBER
+        sync: false
+
+      # Your Vercel frontend URL — used for CORS whitelisting
+      # Example: https://keymart-global.vercel.app
+      - key: FRONTEND_URL
+        sync: false
