@@ -1,10 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
 
-  "comment": "Vercel config for KeyMart Global monorepo — points to the frontend/ subfolder",
-
-  "rootDirectory": "frontend",
-
   "buildCommand": "npm run build",
 
   "outputDirectory": "dist",
