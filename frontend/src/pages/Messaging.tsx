@@ -25,7 +25,7 @@ export default function Messaging() {
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
-  const charCount = message.length;
+
 
   const fetchOrgs = async () => {
     setLoadingOrgs(true);
@@ -191,19 +191,13 @@ export default function Messaging() {
             </div>
 
             <div className="form-group" style={{ marginTop: '1.25rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                <label className="form-label">Your Message</label>
-                <span style={{ fontSize: '0.75rem', color: charCount > 1000 ? 'var(--error)' : 'var(--text-muted)' }}>
-                  {charCount} / 1000
-                </span>
-              </div>
+              <label className="form-label" style={{ marginBottom: '0.5rem', display: 'block' }}>Your Message</label>
               <textarea
                 className="form-input"
                 placeholder="Type your WhatsApp message here. Supports emojis and *bold* formatting."
                 value={message}
                 onChange={(e) => { setMessage(e.target.value); setSent(false); }}
                 rows={6}
-                maxLength={1000}
               />
             </div>
 

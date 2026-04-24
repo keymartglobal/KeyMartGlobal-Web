@@ -46,7 +46,7 @@ export default function Dashboard() {
       icon: Users,
       color: '#e8003d',
       bg: 'rgba(232,0,61,0.12)',
-      link: '/register',
+      link: '/admin/dashboard',
     },
     {
       label: 'Adobe Records',
@@ -54,7 +54,7 @@ export default function Dashboard() {
       icon: Database,
       color: '#1473e6',
       bg: 'rgba(20,115,230,0.12)',
-      link: '/upload',
+      link: '/admin/upload',
     },
     {
       label: 'Org Changes',
@@ -62,7 +62,7 @@ export default function Dashboard() {
       icon: GitCompare,
       color: '#f59e0b',
       bg: 'rgba(245,158,11,0.12)',
-      link: '/changes',
+      link: '/admin/changes',
     },
     {
       label: 'Organizations',
@@ -70,7 +70,7 @@ export default function Dashboard() {
       icon: TrendingUp,
       color: '#10b981',
       bg: 'rgba(16,185,129,0.12)',
-      link: '/messaging',
+      link: '/admin/messaging',
     },
   ];
 
@@ -86,21 +86,21 @@ export default function Dashboard() {
       icon: Upload,
       title: 'Upload Adobe Data',
       desc: 'Import CSV/Excel to Sheet 2',
-      to: '/upload',
+      to: '/admin/upload',
       color: '#1473e6',
     },
     {
       icon: MessageSquare,
       title: 'Send WhatsApp',
       desc: 'Message all users in an org',
-      to: '/messaging',
+      to: '/admin/messaging',
       color: '#10b981',
     },
     {
       icon: GitCompare,
       title: 'View Org Changes',
       desc: 'Review migration log in Sheet 3',
-      to: '/changes',
+      to: '/admin/changes',
       color: '#f59e0b',
     },
   ];

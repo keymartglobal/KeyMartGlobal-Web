@@ -4,6 +4,7 @@
  * Session persists in sessionStorage (cleared on tab close).
  */
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, ShieldCheck, Lock } from 'lucide-react';
 import Logo from './Logo';
 
@@ -13,6 +14,7 @@ const SESSION_KEY    = 'km_admin_auth';
 interface Props { children: React.ReactNode; }
 
 export default function AdminGuard({ children }: Props) {
+  const navigate = useNavigate();
   const [authed, setAuthed]           = useState(false);
   const [password, setPassword]       = useState('');
   const [showPwd, setShowPwd]         = useState(false);
@@ -32,6 +34,7 @@ export default function AdminGuard({ children }: Props) {
       sessionStorage.setItem(SESSION_KEY, 'true');
       setAuthed(true);
       setError('');
+      navigate('/admin/dashboard', { replace: true });
     } else {
       setError('Incorrect password. Try again.');
       setShake(true);

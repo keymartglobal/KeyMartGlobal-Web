@@ -204,6 +204,20 @@ a:hover { opacity: 0.85; }
   padding-right: 2.5rem;
 }
 
+/* ── Select option dropdown — dark background ───────────────── */
+select option {
+  background-color: #1e2535;
+  color: #f1f5f9;
+  font-size: 0.9rem;
+  padding: 0.5rem;
+}
+
+select option:hover,
+select option:checked {
+  background-color: #e8003d;
+  color: #ffffff;
+}
+
 .input-wrapper { position: relative; }
 .input-icon {
   position: absolute;

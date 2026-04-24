@@ -1,11 +1,16 @@
 /**
  * App.tsx — Root application with routing
  *
- * Route structure:
- *   /register   → Public standalone page (no Navbar) — sent to clients
- *   /*          → Admin pages (Navbar + password guard via AdminGuard)
+ * Route map:
+ *   /                → redirects to /register
+ *   /register        → Public standalone client page (no navbar)
+ *   /admin           → Password gate → redirects to /admin/dashboard
+ *   /admin/dashboard → Admin dashboard
+ *   /admin/upload    → Upload Adobe data
+ *   /admin/changes   → Org changes log
+ *   /admin/messaging → WhatsApp messaging
  */
-import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import Navbar from './components/Navbar';
 import AdminGuard from './components/AdminGuard';
@@ -16,40 +21,13 @@ import OrgChanges from './pages/OrgChanges';
 import Messaging from './pages/Messaging';
 import './index.css';
 
-/** Wraps admin routes with Navbar + AdminGuard password protection */
+/** Wraps all admin sub-pages with password guard + navbar */
 function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <AdminGuard>
       <Navbar />
       {children}
     </AdminGuard>
-  );
-}
-
-/** Inner router — needs to be inside BrowserRouter to call useLocation */
-function AppRoutes() {
-  const location = useLocation();
-  const isPublicRegister = location.pathname === '/register';
-
-  /* Public standalone registration page — no Navbar, no AdminGuard */
-  if (isPublicRegister) {
-    return (
-      <Routes>
-        <Route path="/register" element={<Register />} />
-      </Routes>
-    );
-  }
-
-  /* All other routes — protected admin panel */
-  return (
-    <AdminLayout>
-      <Routes>
-        <Route path="/"          element={<Dashboard />} />
-        <Route path="/upload"    element={<AdminUpload />} />
-        <Route path="/changes"   element={<OrgChanges />} />
-        <Route path="/messaging" element={<Messaging />} />
-      </Routes>
-    </AdminLayout>
   );
 }
 
@@ -71,7 +49,44 @@ export default function App() {
           error:   { iconTheme: { primary: '#e8003d', secondary: '#161d2e' } },
         }}
       />
-      <AppRoutes />
+      <Routes>
+        {/* ── Default: redirect root to /register ──────────────── */}
+        <Route path="/" element={<Navigate to="/register" replace />} />
+
+        {/* ── Public client registration page ─────────────────── */}
+        <Route path="/register" element={<Register />} />
+
+        {/* ── Admin: /admin redirects into /admin/dashboard ────── */}
+        <Route
+          path="/admin"
+          element={
+            <AdminGuard>
+              <Navigate to="/admin/dashboard" replace />
+            </AdminGuard>
+          }
+        />
+
+        {/* ── Admin sub-routes (all protected) ─────────────────── */}
+        <Route
+          path="/admin/dashboard"
+          element={<AdminLayout><Dashboard /></AdminLayout>}
+        />
+        <Route
+          path="/admin/upload"
+          element={<AdminLayout><AdminUpload /></AdminLayout>}
+        />
+        <Route
+          path="/admin/changes"
+          element={<AdminLayout><OrgChanges /></AdminLayout>}
+        />
+        <Route
+          path="/admin/messaging"
+          element={<AdminLayout><Messaging /></AdminLayout>}
+        />
+
+        {/* ── Fallback: anything unknown → /register ───────────── */}
+        <Route path="*" element={<Navigate to="/register" replace />} />
+      </Routes>
     </BrowserRouter>
   );
 }
