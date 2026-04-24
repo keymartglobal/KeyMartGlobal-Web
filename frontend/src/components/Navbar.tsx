@@ -1,16 +1,16 @@
 /**
  * Navbar — global navigation bar with Adobe-style dark design
  */
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, Upload, MessageSquare, GitCompare, ShieldCheck } from 'lucide-react';
 import Logo from './Logo';
 import './Navbar.css';
 
 const NAV_ITEMS = [
-  { to: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/upload', label: 'Upload Data', icon: Upload },
-  { to: '/changes', label: 'Org Changes', icon: GitCompare },
-  { to: '/messaging', label: 'Messaging', icon: MessageSquare },
+  { to: '/admin/dashboard', label: 'Dashboard',  icon: LayoutDashboard },
+  { to: '/admin/upload',    label: 'Upload Data', icon: Upload },
+  { to: '/admin/changes',   label: 'Org Changes', icon: GitCompare },
+  { to: '/admin/messaging', label: 'Messaging',   icon: MessageSquare },
 ];
 
 export default function Navbar() {
@@ -18,7 +18,7 @@ export default function Navbar() {
     <nav className="navbar">
       <div className="navbar-inner">
         {/* Brand */}
-        <NavLink to="/" className="navbar-brand">
+        <NavLink to="/admin/dashboard" className="navbar-brand">
           <Logo size={36} />
           <div className="brand-text">
             <span className="brand-name">KeyMart</span>
@@ -32,7 +32,6 @@ export default function Navbar() {
             <li key={to}>
               <NavLink
                 to={to}
-                end={to === '/'}
                 className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
               >
                 <Icon size={16} />

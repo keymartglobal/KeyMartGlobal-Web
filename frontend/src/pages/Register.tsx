@@ -4,7 +4,7 @@
  * Route: /register — sent directly to clients.
  */
 import { useState } from 'react';
-import { ArrowRight, CheckCircle2, User, Mail, Phone, Clock, Zap, Shield, Layers, Activity } from 'lucide-react';
+import { ArrowRight, CheckCircle2, User, Mail, Phone, Zap, Shield, Layers, Activity } from 'lucide-react';
 import { registerCustomer } from '../services/api';
 import './Register.css';
 
