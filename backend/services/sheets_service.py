@@ -30,7 +30,7 @@ SHEET3_NAME = "Org Changes"
 
 # Sheet headers — strictly defined per spec
 SHEET1_HEADERS = ["Name", "Phone", "Gmail", "Duration", "Timestamp"]
-SHEET2_HEADERS = ["Gmail", "Organization"]
+SHEET2_HEADERS = ["Email", "Organization", "Products", "Duration (months)", "Days Left", "Refundable", "Status"]
 SHEET3_HEADERS = ["Gmail", "From Organization", "To Organization", "Detected At"]
 
 
@@ -191,7 +191,7 @@ class SheetsService:
         records = self.get_all_adobe_data()
         gmail_lower = gmail.strip().lower()
         for r in records:
-            if r.get("Gmail", "").strip().lower() == gmail_lower:
+            if r.get("Email", "").strip().lower() == gmail_lower:
                 return r
         return None
 
@@ -211,7 +211,11 @@ class SheetsService:
         Replace all of Sheet 2 with fresh normalized data.
         Called after admin uploads a CSV/Excel file.
         """
-        rows = [[row.get("Gmail", ""), row.get("Organization", "")] for row in parsed_data]
+        if not parsed_data:
+            self._clear_and_write(SHEET2_NAME, SHEET2_HEADERS, [])
+            return
+
+        rows = [[str(row.get(h, "")) for h in SHEET2_HEADERS] for row in parsed_data]
         self._clear_and_write(SHEET2_NAME, SHEET2_HEADERS, rows)
         logger.info(f"Sheet 2 replaced with {len(rows)} records.")
 
@@ -226,30 +230,32 @@ class SheetsService:
             else:
                 df = pd.read_excel(io.BytesIO(content))
 
-            # Normalize column names: strip whitespace, title-case
-            df.columns = [col.strip().title().replace(" ", "") for col in df.columns]
+            # Normalize column names: strip whitespace
+            df.columns = [col.strip() for col in df.columns]
 
             # Flexible column name mapping
             col_map = {}
             for col in df.columns:
                 col_lower = col.lower()
                 if "gmail" in col_lower or "email" in col_lower or "mail" in col_lower:
-                    col_map[col] = "Gmail"
+                    col_map[col] = "Email"
                 elif "org" in col_lower or "organization" in col_lower or "company" in col_lower:
                     col_map[col] = "Organization"
 
             df.rename(columns=col_map, inplace=True)
 
             # Ensure required columns exist
-            for required in ["Gmail", "Organization"]:
+            for required in ["Email", "Organization"]:
                 if required not in df.columns:
                     logger.warning(f"Column '{required}' not found in uploaded file.")
                     df[required] = ""
 
-            df = df[["Gmail", "Organization"]].dropna(how="all")
-            df["Gmail"] = df["Gmail"].astype(str).str.strip().str.lower()
+            df.dropna(subset=["Email", "Organization"], how="all", inplace=True)
+            df["Email"] = df["Email"].astype(str).str.strip().str.lower()
             df["Organization"] = df["Organization"].astype(str).str.strip()
-            df = df[df["Gmail"] != "nan"]
+            df = df[df["Email"] != "nan"]
+
+            df.fillna("", inplace=True)
 
             return df.to_dict(orient="records")
         except Exception as e:

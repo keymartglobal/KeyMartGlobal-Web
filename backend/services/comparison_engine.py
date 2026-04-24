@@ -37,16 +37,16 @@ class ComparisonEngine:
 
         # Build a lookup map: Gmail → Organization for the old data
         old_map = {
-            row.get("Gmail", "").strip().lower(): row.get("Organization", "").strip()
+            row.get("Email", "").strip().lower(): row.get("Organization", "").strip()
             for row in previous_data
-            if row.get("Gmail")
+            if row.get("Email")
         }
 
         # Build a lookup map for the new data
         new_map = {
-            row.get("Gmail", "").strip().lower(): row.get("Organization", "").strip()
+            row.get("Email", "").strip().lower(): row.get("Organization", "").strip()
             for row in new_data
-            if row.get("Gmail")
+            if row.get("Email")
         }
 
         changes_found = 0

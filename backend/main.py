@@ -273,7 +273,7 @@ async def send_whatsapp_to_org(req: SendMessageRequest, background_tasks: Backgr
         # Build recipient list
         recipients = []
         for user in adobe_users:
-            gmail = user.get("Gmail", "")
+            gmail = user.get("Email", "")
             phone = gmail_to_phone.get(gmail)
             if phone:
                 recipients.append({"gmail": gmail, "phone": phone})
@@ -312,7 +312,7 @@ def get_users_for_messaging(organization: str):
 
         result = []
         for user in adobe_users:
-            gmail = user.get("Gmail", "")
+            gmail = user.get("Email", "")
             result.append({
                 "gmail": gmail,
                 "phone": gmail_to_phone.get(gmail, "Not found"),

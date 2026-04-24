@@ -23,7 +23,7 @@ SHEET_ID = os.getenv("GOOGLE_SHEET_ID", "")
 
 SHEETS = {
     "Customer Master": ["Name", "Phone", "Gmail", "Duration", "Timestamp"],
-    "Adobe Data":      ["Gmail", "Organization", "Products", "Duration (months)", "Days Left", "Refundable", "Status"],
+    "Adobe Data":      ["Email", "Organization", "Products", "Duration (months)", "Days Left", "Refundable", "Status"],
     "Org Changes":     ["Gmail", "From Organization", "To Organization", "Detected At"],
 }
 
