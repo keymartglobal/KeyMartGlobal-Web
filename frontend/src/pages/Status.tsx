@@ -119,6 +119,9 @@ export default function Status() {
           justify-content: center;
           padding: 2rem 1rem;
           font-family: 'Inter', system-ui, -apple-system, sans-serif;
+          background-image:
+            radial-gradient(ellipse 70% 50% at 20% -10%, rgba(0,161,155,0.08) 0%, transparent 60%),
+            radial-gradient(ellipse 50% 40% at 80% 110%, rgba(26,58,143,0.06) 0%, transparent 60%);
         }
 
         .status-wrapper {
@@ -138,18 +141,18 @@ export default function Status() {
         .status-icon-box {
           width: 64px;
           height: 64px;
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.1);
+          background: rgba(0, 161, 155, 0.1);
+          border: 1px solid rgba(0, 161, 155, 0.2);
           border-radius: 16px;
           display: flex;
           align-items: center;
           justify-content: center;
           margin: 0 auto 1.5rem auto;
-          box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+          box-shadow: 0 8px 32px rgba(0,161,155,0.15);
         }
 
         .status-icon {
-          color: #f1f5f9;
+          color: #00A19B;
         }
 
         .status-title {
@@ -162,18 +165,18 @@ export default function Status() {
 
         .status-subtitle {
           font-size: 0.95rem;
-          color: #94a3b8;
+          color: #6b7a99;
           margin: 0;
         }
 
         /* Main Card */
         .status-card {
           width: 100%;
-          background: #161d2e;
+          background: #111827;
           border-radius: 24px;
           padding: 2rem;
-          border: 1px solid rgba(255, 255, 255, 0.08);
-          box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+          border: 1px solid rgba(0, 161, 155, 0.15);
+          box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(0,161,155,0.06);
         }
 
         .status-form {
@@ -184,28 +187,29 @@ export default function Status() {
 
         .status-input {
           width: 100%;
-          background: #0a0d14;
-          border: 1px solid rgba(255, 255, 255, 0.12);
+          background: rgba(0, 161, 155, 0.04);
+          border: 1px solid rgba(0, 161, 155, 0.15);
           border-radius: 12px;
           padding: 1rem 1.25rem;
-          color: #f1f5f9;
+          color: #f0ede8;
           font-size: 1rem;
           outline: none;
           transition: all 0.2s ease;
         }
 
         .status-input:focus {
-          border-color: #e8003d;
-          box-shadow: 0 0 0 4px rgba(232, 0, 61, 0.15);
+          border-color: #00A19B;
+          box-shadow: 0 0 0 4px rgba(0, 161, 155, 0.15);
+          background: rgba(0, 161, 155, 0.07);
         }
 
         .status-input::placeholder {
-          color: #475569;
+          color: #6b7a99;
         }
 
         .status-submit {
           width: 100%;
-          background: linear-gradient(135deg, #e8003d 0%, #b3002f 100%);
+          background: linear-gradient(135deg, #00A19B 0%, #008f89 100%);
           color: white;
           border: none;
           border-radius: 12px;
@@ -218,12 +222,13 @@ export default function Status() {
           gap: 0.5rem;
           cursor: pointer;
           transition: all 0.2s ease;
-          box-shadow: 0 4px 12px rgba(232, 0, 61, 0.3);
+          box-shadow: 0 4px 16px rgba(0, 161, 155, 0.3);
         }
 
         .status-submit:hover:not(:disabled) {
           transform: translateY(-2px);
-          box-shadow: 0 6px 20px rgba(232, 0, 61, 0.4);
+          box-shadow: 0 8px 28px rgba(0, 161, 155, 0.4);
+          background: linear-gradient(135deg, #00b5ae 0%, #00A19B 100%);
         }
 
         .status-submit:disabled {
@@ -245,8 +250,8 @@ export default function Status() {
         .status-error {
           margin-top: 1.5rem;
           padding: 1rem;
-          background: rgba(232, 0, 61, 0.1);
-          border: 1px solid rgba(232, 0, 61, 0.2);
+          background: rgba(239, 68, 68, 0.08);
+          border: 1px solid rgba(239, 68, 68, 0.2);
           border-radius: 12px;
           color: #fca5a5;
           font-size: 0.85rem;
@@ -288,8 +293,8 @@ export default function Status() {
         }
 
         .status-details-box {
-          background: #0a0d14;
-          border: 1px solid rgba(255, 255, 255, 0.06);
+          background: rgba(0, 161, 155, 0.04);
+          border: 1px solid rgba(0, 161, 155, 0.14);
           border-radius: 16px;
           padding: 1.5rem;
         }
@@ -304,16 +309,15 @@ export default function Status() {
         .sd-org-icon-wrap {
           width: 48px;
           height: 48px;
-          background: rgba(255,255,255,0.05);
+          background: rgba(0, 161, 155, 0.1);
+          border: 1px solid rgba(0, 161, 155, 0.2);
           border-radius: 12px;
           display: flex;
           align-items: center;
           justify-content: center;
         }
 
-        .sd-org-icon {
-          color: #e8003d;
-        }
+        .sd-org-icon { color: #00A19B; }
 
         .sd-org-text {
           display: flex;
@@ -323,31 +327,23 @@ export default function Status() {
 
         .sd-label {
           font-size: 0.7rem;
-          color: #64748b;
+          color: #00A19B;
           text-transform: uppercase;
-          letter-spacing: 0.08em;
+          letter-spacing: 0.09em;
           font-weight: 700;
         }
 
-        .sd-value {
-          font-size: 1.1rem;
-          font-weight: 700;
-          color: #f1f5f9;
-        }
+        .sd-value { font-size: 1.1rem; font-weight: 700; color: #f0ede8; }
 
         .sd-value-large {
-          font-size: 1.45rem;
+          font-size: 1.5rem;
           font-weight: 800;
           color: #ffffff;
-          letter-spacing: -0.02em;
+          letter-spacing: -0.025em;
           line-height: 1.2;
         }
 
-        .sd-divider {
-          height: 1px;
-          background: rgba(255, 255, 255, 0.06);
-          margin: 1.25rem 0;
-        }
+        .sd-divider { height: 1px; background: rgba(0, 161, 155, 0.15); margin: 1.25rem 0; }
 
         .sd-plan-row {
           display: flex;
@@ -356,11 +352,11 @@ export default function Status() {
         }
 
         .sd-plan-box {
-          background: rgba(255,255,255,0.03);
-          border: 1px solid rgba(255,255,255,0.08);
+          background: rgba(0, 161, 155, 0.06);
+          border: 1px solid rgba(0, 161, 155, 0.15);
           padding: 0.75rem 1rem;
           border-radius: 8px;
-          color: #f1f5f9;
+          color: #f0ede8;
           font-size: 0.9rem;
           font-weight: 500;
         }

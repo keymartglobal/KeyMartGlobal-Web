@@ -108,19 +108,22 @@ export default function AdminGuard({ children }: Props) {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: #0a0d14;
+          background: #080c18;
+          background-image:
+            radial-gradient(ellipse 70% 50% at 20% -10%, rgba(0,161,155,0.08) 0%, transparent 60%),
+            radial-gradient(ellipse 50% 40% at 80% 110%, rgba(26,58,143,0.07) 0%, transparent 60%);
           padding: 1rem;
         }
 
         .ag-card {
-          background: #161d2e;
-          border: 1px solid rgba(255,255,255,0.08);
+          background: #111827;
+          border: 1px solid rgba(0,161,155,0.15);
           border-radius: 20px;
           padding: 2.5rem;
           width: 100%;
           max-width: 420px;
           text-align: center;
-          box-shadow: 0 0 60px rgba(0,0,0,0.5);
+          box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,161,155,0.06);
         }
 
         @keyframes shake {
@@ -143,21 +146,21 @@ export default function AdminGuard({ children }: Props) {
         .ag-brand-name {
           font-size: 1.05rem;
           font-weight: 800;
-          color: #f1f5f9;
+          color: #f0ede8;
           letter-spacing: -0.02em;
         }
         .ag-brand-sub {
           font-size: 0.7rem;
-          font-weight: 600;
-          color: var(--accent-red, #e8003d);
+          font-weight: 700;
+          color: #00A19B;
           text-transform: uppercase;
-          letter-spacing: 0.07em;
+          letter-spacing: 0.09em;
           margin-top: 1px;
         }
 
         .ag-divider {
           height: 1px;
-          background: rgba(255,255,255,0.07);
+          background: rgba(0,161,155,0.12);
           margin-bottom: 1.75rem;
         }
 
@@ -165,12 +168,12 @@ export default function AdminGuard({ children }: Props) {
           width: 52px;
           height: 52px;
           border-radius: 14px;
-          background: rgba(232,0,61,0.12);
-          border: 1px solid rgba(232,0,61,0.2);
+          background: rgba(0,161,155,0.1);
+          border: 1px solid rgba(0,161,155,0.2);
           display: flex;
           align-items: center;
           justify-content: center;
-          color: #e8003d;
+          color: #00A19B;
           margin: 0 auto 1rem;
         }
 
@@ -179,12 +182,12 @@ export default function AdminGuard({ children }: Props) {
           font-weight: 800;
           letter-spacing: -0.02em;
           margin-bottom: 0.4rem;
-          color: #f1f5f9;
+          color: #f0ede8;
         }
 
         .ag-desc {
           font-size: 0.84rem;
-          color: #64748b;
+          color: #6b7a99;
           margin-bottom: 1.5rem;
         }
 
@@ -213,17 +216,17 @@ export default function AdminGuard({ children }: Props) {
         .ag-input-icon {
           position: absolute;
           left: 0.9rem;
-          color: #475569;
+          color: #6b7a99;
           pointer-events: none;
         }
 
         .ag-input {
           width: 100%;
-          background: rgba(255,255,255,0.04);
-          border: 1px solid rgba(255,255,255,0.08);
+          background: rgba(0,161,155,0.04);
+          border: 1px solid rgba(0,161,155,0.15);
           border-radius: 10px;
           padding: 0.825rem 3rem 0.825rem 2.75rem;
-          color: #f1f5f9;
+          color: #f0ede8;
           font-size: 0.95rem;
           font-family: inherit;
           outline: none;
@@ -231,23 +234,24 @@ export default function AdminGuard({ children }: Props) {
           letter-spacing: 0.05em;
         }
         .ag-input:focus {
-          border-color: #e8003d;
-          box-shadow: 0 0 0 3px rgba(232,0,61,0.1);
+          border-color: #00A19B;
+          box-shadow: 0 0 0 3px rgba(0,161,155,0.12);
+          background: rgba(0,161,155,0.07);
         }
-        .ag-input::placeholder { color: #374151; letter-spacing: 0; }
+        .ag-input::placeholder { color: #6b7a99; letter-spacing: 0; }
 
         .ag-eye-btn {
           position: absolute;
           right: 0.9rem;
           background: none;
           border: none;
-          color: #475569;
+          color: #6b7a99;
           cursor: pointer;
           display: flex;
           padding: 0.2rem;
           transition: color 0.2s;
         }
-        .ag-eye-btn:hover { color: #94a3b8; }
+        .ag-eye-btn:hover { color: #b8c4d8; }
 
         .ag-submit {
           display: flex;
@@ -255,7 +259,7 @@ export default function AdminGuard({ children }: Props) {
           justify-content: center;
           gap: 0.5rem;
           padding: 0.85rem;
-          background: #e8003d;
+          background: linear-gradient(135deg, #00A19B 0%, #008f89 100%);
           color: #fff;
           border: none;
           border-radius: 10px;
@@ -263,12 +267,13 @@ export default function AdminGuard({ children }: Props) {
           font-weight: 700;
           font-family: inherit;
           cursor: pointer;
-          transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+          transition: all 0.2s ease;
+          box-shadow: 0 4px 20px rgba(0,161,155,0.3);
         }
         .ag-submit:hover {
-          background: #c8003a;
+          background: linear-gradient(135deg, #00b5ae 0%, #00A19B 100%);
           transform: translateY(-1px);
-          box-shadow: 0 6px 24px rgba(232,0,61,0.35);
+          box-shadow: 0 8px 30px rgba(0,161,155,0.4);
         }
       `}</style>
     </div>

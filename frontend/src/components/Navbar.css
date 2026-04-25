@@ -1,12 +1,13 @@
-/* ── Navbar Styles ─────────────────────────────────────────── */
+/* ── Navbar — Premium Mint + Royal Blue Theme ─────────────── */
 .navbar {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(10, 13, 20, 0.85);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(8, 12, 24, 0.88);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border-bottom: 1px solid rgba(0, 161, 155, 0.14);
+  box-shadow: 0 1px 32px rgba(0, 0, 0, 0.4);
 }
 
 .navbar-inner {
@@ -37,15 +38,15 @@
 .brand-name {
   font-size: 1rem;
   font-weight: 800;
-  color: #f1f5f9;
+  color: #f0ede8;
   letter-spacing: -0.02em;
 }
 
 .brand-sub {
   font-size: 0.65rem;
-  font-weight: 600;
-  color: var(--accent-red);
-  letter-spacing: 0.08em;
+  font-weight: 700;
+  color: #00A19B;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
@@ -66,20 +67,21 @@
   border-radius: 8px;
   font-size: 0.85rem;
   font-weight: 500;
-  color: var(--text-muted);
+  color: #6b7a99;
   text-decoration: none;
-  transition: var(--transition);
+  transition: all 0.2s ease;
   white-space: nowrap;
 }
 
 .nav-link:hover {
-  color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.05);
+  color: #f0ede8;
+  background: rgba(0, 161, 155, 0.08);
 }
 
 .nav-link.active {
-  color: var(--accent-red);
-  background: var(--accent-red-soft);
+  color: #00A19B;
+  background: rgba(0, 161, 155, 0.12);
+  border: 1px solid rgba(0, 161, 155, 0.2);
 }
 
 /* ── Right Side ────────────────────────────────────────────── */
@@ -96,12 +98,12 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.35rem 0.75rem;
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.25);
+  background: rgba(0, 161, 155, 0.1);
+  border: 1px solid rgba(0, 161, 155, 0.25);
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--success);
+  color: #00A19B;
 }
 
 .nav-adobe-badge {
@@ -109,16 +111,16 @@
   align-items: center;
   gap: 0.4rem;
   padding: 0.35rem 0.75rem;
-  background: var(--accent-red-soft);
-  border: 1px solid rgba(232, 0, 61, 0.2);
+  background: rgba(26, 58, 143, 0.15);
+  border: 1px solid rgba(35, 72, 176, 0.3);
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--accent-red);
+  color: #7eb3ff;
 }
 
 /* ── Responsive ────────────────────────────────────────────── */
 @media (max-width: 900px) {
   .navbar-links { display: none; }
-  .brand-sub { display: none; }
+  .brand-sub    { display: none; }
 }
