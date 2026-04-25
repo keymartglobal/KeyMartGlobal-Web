@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Mail, Search as SearchIcon, ClipboardList, Building2, ShieldAlert } from 'lucide-react';
+import { Search as SearchIcon, ClipboardList, Building2, ShieldAlert } from 'lucide-react';
 import { checkStatus } from '../services/api';
 
 export default function Status() {
