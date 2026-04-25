@@ -69,6 +69,12 @@ class RegistrationData(BaseModel):
     duration: str  # e.g., "1 Month", "3 Months", "1 Year"
 
 
+class UpdatePhoneRequest(BaseModel):
+    """Model for updating a customer's phone number."""
+    gmail: str
+    phone: str
+
+
 class SendMessageRequest(BaseModel):
     """Model for sending WhatsApp messages to an organization's users."""
     organization: str
@@ -139,6 +145,17 @@ def get_all_customers():
         return {"success": True, "data": customers, "count": len(customers)}
     except Exception as e:
         logger.error(f"Failed to fetch customers: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.put("/api/customers/phone", tags=["Registration"])
+def update_phone(data: UpdatePhoneRequest):
+    """Update or insert a customer's phone number."""
+    try:
+        sheets.update_customer_phone(data.gmail, data.phone)
+        return {"success": True, "message": "Phone number updated successfully."}
+    except Exception as e:
+        logger.error(f"Failed to update phone: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

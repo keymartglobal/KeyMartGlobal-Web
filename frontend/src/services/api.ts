@@ -31,6 +31,9 @@ export const registerCustomer = (data: {
 export const getAllCustomers = () => api.get('/api/customers');
 export const searchCustomer = (gmail: string) => api.get(`/api/search?gmail=${encodeURIComponent(gmail)}`);
 
+export const updateCustomerPhone = (data: { gmail: string; phone: string }) => 
+  api.put('/api/customers/phone', data);
+
 // ── Admin Upload ──────────────────────────────────────────────────────────────
 export const uploadAdobeData = (file: File) => {
   const form = new FormData();

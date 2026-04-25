@@ -5,10 +5,10 @@
 import { useEffect, useState } from 'react';
 import {
   MessageSquare, Users, Send, ChevronDown,
-  Phone, Mail, RefreshCw, CheckCircle2, AlertCircle
+  Phone, Mail, RefreshCw, CheckCircle2, AlertCircle, Edit2, Save, X
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { getOrganizations, getUsersForMessaging, sendMessageToOrg } from '../services/api';
+import { getOrganizations, getUsersForMessaging, sendMessageToOrg, updateCustomerPhone } from '../services/api';
 
 interface Recipient {
   gmail: string;
@@ -25,6 +25,10 @@ export default function Messaging() {
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+
+  const [editingPhone, setEditingPhone] = useState<string | null>(null);
+  const [editPhoneValue, setEditPhoneValue] = useState('');
+  const [savingPhone, setSavingPhone] = useState(false);
 
 
   const fetchOrgs = async () => {
@@ -77,6 +81,29 @@ export default function Messaging() {
       toast.error(err.message || 'Failed to send messages.');
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleEditClick = (r: Recipient) => {
+    setEditingPhone(r.gmail);
+    setEditPhoneValue(r.phone === 'Not found' ? '' : r.phone);
+  };
+
+  const handleSavePhone = async (gmail: string) => {
+    if (!editPhoneValue.trim()) {
+      toast.error('Phone number cannot be empty.');
+      return;
+    }
+    setSavingPhone(true);
+    try {
+      await updateCustomerPhone({ gmail, phone: editPhoneValue });
+      setRecipients(prev => prev.map(r => r.gmail === gmail ? { ...r, phone: editPhoneValue } : r));
+      setEditingPhone(null);
+      toast.success('Phone number saved to Sheet 1.');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update phone number.');
+    } finally {
+      setSavingPhone(false);
     }
   };
 
@@ -158,9 +185,47 @@ export default function Messaging() {
                         </div>
                         <div className="r-phone">
                           <Phone size={11} />
-                          <span className={r.phone === 'Not found' ? 'phone-missing' : 'phone-ok'}>
-                            {r.phone}
-                          </span>
+                          {editingPhone === r.gmail ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                              <input
+                                type="text"
+                                className="form-input"
+                                style={{ padding: '0.1rem 0.4rem', fontSize: '0.75rem', height: 'auto', minHeight: '22px', width: '120px' }}
+                                value={editPhoneValue}
+                                onChange={e => setEditPhoneValue(e.target.value)}
+                                autoFocus
+                              />
+                              <button
+                                className="btn btn-ghost btn-sm"
+                                style={{ padding: '0.15rem', minHeight: 'auto', color: 'var(--success)' }}
+                                onClick={() => handleSavePhone(r.gmail)}
+                                disabled={savingPhone}
+                              >
+                                <Save size={13} />
+                              </button>
+                              <button
+                                className="btn btn-ghost btn-sm"
+                                style={{ padding: '0.15rem', minHeight: 'auto', color: 'var(--error)' }}
+                                onClick={() => setEditingPhone(null)}
+                                disabled={savingPhone}
+                              >
+                                <X size={13} />
+                              </button>
+                            </div>
+                          ) : (
+                            <>
+                              <span className={r.phone === 'Not found' ? 'phone-missing' : 'phone-ok'}>
+                                {r.phone}
+                              </span>
+                              <button
+                                className="btn btn-ghost btn-sm inline-edit-btn"
+                                onClick={() => handleEditClick(r)}
+                                title="Edit Phone Number"
+                              >
+                                <Edit2 size={11} />
+                              </button>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -277,6 +342,8 @@ export default function Messaging() {
         .r-gmail { color: var(--text-secondary); margin-bottom: 0.15rem; }
         .phone-ok { color: var(--success); }
         .phone-missing { color: var(--error); }
+        .inline-edit-btn { padding: 0.1rem; height: auto; min-height: auto; margin-left: 0.25rem; opacity: 0; transition: opacity 0.2s; }
+        .recipient-row:hover .inline-edit-btn { opacity: 1; }
 
         /* WhatsApp Preview */
         .wa-preview-label {

@@ -177,8 +177,53 @@ class SheetsService:
             data.get("gmail", ""),
             data.get("duration", ""),
             timestamp,
-        ])
         logger.info(f"Customer added to Sheet 1: {data.get('gmail')}")
+
+    def update_customer_phone(self, gmail: str, phone: str):
+        """Update or insert a customer's phone number in Sheet 1."""
+        if not self.sheet:
+            return
+            
+        gmail_lower = gmail.strip().lower()
+        try:
+            result = self.sheet.values().get(
+                spreadsheetId=self.sheet_id,
+                range=SHEET1_NAME,
+            ).execute()
+            rows = result.get("values", [])
+            
+            if not rows:
+                return
+                
+            headers = rows[0]
+            try:
+                gmail_idx = headers.index("Gmail")
+                phone_idx = headers.index("Phone")
+            except ValueError:
+                return
+                
+            for i, row in enumerate(rows[1:], start=2):
+                padded_row = row + [""] * (len(headers) - len(row))
+                if padded_row[gmail_idx].strip().lower() == gmail_lower:
+                    padded_row[phone_idx] = phone
+                    # Convert to character for column range (A to E)
+                    self.sheet.values().update(
+                        spreadsheetId=self.sheet_id,
+                        range=f"{SHEET1_NAME}!A{i}:E{i}",
+                        valueInputOption="USER_ENTERED",
+                        body={"values": [padded_row[:5]]}
+                    ).execute()
+                    logger.info(f"Updated phone for {gmail} in Sheet 1")
+                    return
+            
+            # If not found, append a new row
+            from datetime import datetime
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            new_row = ["", phone, gmail, "", timestamp]
+            self._append_row(SHEET1_NAME, new_row)
+            logger.info(f"Appended new user {gmail} to Sheet 1 with phone {phone}")
+        except Exception as e:
+            logger.error(f"Failed to update customer phone: {e}")
 
     # ── Sheet 2: Adobe Data ──────────────────────────────────────────────────
 
