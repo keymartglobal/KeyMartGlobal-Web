@@ -104,7 +104,7 @@ class SheetsService:
             self.sheet.values().append(
                 spreadsheetId=self.sheet_id,
                 range=f"{sheet_name}!A1",
-                valueInputOption="USER_ENTERED",
+                valueInputOption="RAW",
                 insertDataOption="INSERT_ROWS",
                 body={"values": [values]},
             ).execute()
@@ -126,7 +126,7 @@ class SheetsService:
             self.sheet.values().update(
                 spreadsheetId=self.sheet_id,
                 range=f"{sheet_name}!A1",
-                valueInputOption="USER_ENTERED",
+                valueInputOption="RAW",
                 body={"values": all_values},
             ).execute()
             logger.info(f"Sheet '{sheet_name}' cleared and rewritten with {len(rows)} data rows.")
@@ -184,6 +184,9 @@ class SheetsService:
         """Update or insert a customer's phone number in Sheet 1."""
         if not self.sheet:
             return
+
+        # Sanitize phone: strip whitespace. We use RAW writes so no formula parsing.
+        phone = phone.strip()
             
         gmail_lower = gmail.strip().lower()
         try:
@@ -207,11 +210,10 @@ class SheetsService:
                 padded_row = row + [""] * (len(headers) - len(row))
                 if padded_row[gmail_idx].strip().lower() == gmail_lower:
                     padded_row[phone_idx] = phone
-                    # Convert to character for column range (A to E)
                     self.sheet.values().update(
                         spreadsheetId=self.sheet_id,
                         range=f"{SHEET1_NAME}!A{i}:E{i}",
-                        valueInputOption="USER_ENTERED",
+                        valueInputOption="RAW",
                         body={"values": [padded_row[:5]]}
                     ).execute()
                     logger.info(f"Updated phone for {gmail} in Sheet 1")

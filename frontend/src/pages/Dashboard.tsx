@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Users, Database, GitCompare, MessageSquare,
-  Upload, UserPlus, TrendingUp, Activity, ArrowRight, RefreshCw
+  Upload, UserPlus, TrendingUp, Activity, ArrowRight, RefreshCw, UsersRound
 } from 'lucide-react';
 import { getDashboardStats, healthCheck } from '../services/api';
 
@@ -103,6 +103,13 @@ export default function Dashboard() {
       to: '/admin/changes',
       color: '#f59e0b',
     },
+    {
+      icon: UsersRound,
+      title: 'User Directory',
+      desc: 'Manage all users & phone numbers',
+      to: '/admin/users',
+      color: '#8b5cf6',
+    },
   ];
 
   return (
@@ -160,7 +167,7 @@ export default function Dashboard() {
             <h2 style={{ fontSize: '1.1rem' }}>Quick Actions</h2>
           </div>
         </div>
-        <div className="grid-4">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
           {QUICK_ACTIONS.map(({ icon: Icon, title, desc, to, color }) => (
             <Link to={to} key={to} style={{ textDecoration: 'none' }}>
               <div className="quick-action-card">
