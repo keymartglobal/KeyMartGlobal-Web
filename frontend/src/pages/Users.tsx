@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Mail, Phone, ChevronDown, Edit2, Save, X, RefreshCw, Briefcase, Calendar } from 'lucide-react';
+import { Mail, Phone, ChevronDown, Edit2, Save, X, RefreshCw, Briefcase, Calendar, Search } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getAllMergedUsers, getOrganizations, updateCustomerPhone } from '../services/api';
 
@@ -14,6 +14,8 @@ export default function Users() {
   const [users, setUsers] = useState<MergedUser[]>([]);
   const [organizations, setOrganizations] = useState<string[]>([]);
   const [selectedOrg, setSelectedOrg] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeSearch, setActiveSearch] = useState('');
   
   const [loading, setLoading] = useState(false);
   const [editingPhone, setEditingPhone] = useState<string | null>(null);
@@ -63,9 +65,24 @@ export default function Users() {
     }
   };
 
-  const filteredUsers = selectedOrg 
-    ? users.filter(u => u.organization === selectedOrg)
-    : users;
+  const filteredUsers = users.filter(u => {
+    const matchOrg = selectedOrg ? u.organization === selectedOrg : true;
+    const searchLower = activeSearch.toLowerCase();
+    const matchSearch = activeSearch 
+      ? u.gmail.toLowerCase().includes(searchLower) || u.phone.toLowerCase().includes(searchLower)
+      : true;
+    return matchOrg && matchSearch;
+  });
+
+  const handleSearch = () => {
+    setActiveSearch(searchTerm);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch();
+    }
+  };
 
   return (
     <main className="page fade-in">
@@ -101,6 +118,32 @@ export default function Users() {
             </select>
           </div>
         </div>
+
+        {/* Search Bar */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1.5, minWidth: '320px' }}>
+          <div className="input-wrapper" style={{ flex: 1 }}>
+            <Search className="input-icon" size={15} style={{ color: 'var(--text-muted)' }} />
+            <input
+              type="text"
+              className="form-input"
+              placeholder="Search by Gmail or Mobile..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={handleKeyDown}
+              disabled={loading}
+              style={{ paddingTop: '0.5rem', paddingBottom: '0.5rem', paddingLeft: '2.5rem' }}
+            />
+          </div>
+          <button 
+            className="btn btn-primary btn-sm" 
+            onClick={handleSearch}
+            disabled={loading}
+            style={{ padding: '0.5rem 1rem' }}
+          >
+            Search
+          </button>
+        </div>
+
         <div className="badge badge-blue">
           {filteredUsers.length} Users Found
         </div>
