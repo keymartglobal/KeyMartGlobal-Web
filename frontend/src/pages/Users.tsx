@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Users as UsersIcon, Mail, Phone, ChevronDown, Edit2, Save, X, RefreshCw, Briefcase, Calendar } from 'lucide-react';
+import { Mail, Phone, ChevronDown, Edit2, Save, X, RefreshCw, Briefcase, Calendar } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getAllMergedUsers, getOrganizations, updateCustomerPhone } from '../services/api';
 
