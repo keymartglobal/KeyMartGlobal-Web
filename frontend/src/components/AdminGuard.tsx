@@ -51,10 +51,10 @@ export default function AdminGuard({ children }: Props) {
       <div className={`ag-card ${shake ? 'ag-shake' : ''}`}>
         {/* Brand */}
         <div className="ag-brand">
-          <Logo size={44} />
+          <Logo size={48} />
           <div>
-            <div className="ag-brand-name">KeyMart Global</div>
-            <div className="ag-brand-sub">Admin Access</div>
+            <div className="ag-brand-name">Keymart</div>
+            <div className="ag-brand-sub">GLOBAL</div>
           </div>
         </div>
 
@@ -144,18 +144,19 @@ export default function AdminGuard({ children }: Props) {
           text-align: left;
         }
         .ag-brand-name {
-          font-size: 1.05rem;
+          font-size: 1.3rem;
           font-weight: 800;
-          color: #f0ede8;
-          letter-spacing: -0.02em;
+          color: #ffffff;
+          letter-spacing: -0.01em;
+          line-height: 1;
         }
         .ag-brand-sub {
-          font-size: 0.7rem;
+          font-size: 0.6rem;
           font-weight: 700;
-          color: #00A19B;
+          color: #C9A84C;
           text-transform: uppercase;
-          letter-spacing: 0.09em;
-          margin-top: 1px;
+          letter-spacing: 0.2em;
+          margin-top: 3px;
         }
 
         .ag-divider {

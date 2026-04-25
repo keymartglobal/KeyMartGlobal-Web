@@ -7,11 +7,11 @@ import Logo from './Logo';
 import './Navbar.css';
 
 const NAV_ITEMS = [
-  { to: '/admin/dashboard', label: 'Dashboard',  icon: LayoutDashboard },
-  { to: '/admin/users',     label: 'Users',      icon: Users },
-  { to: '/admin/upload',    label: 'Upload Data', icon: Upload },
-  { to: '/admin/changes',   label: 'Org Changes', icon: GitCompare },
-  { to: '/admin/messaging', label: 'Messaging',   icon: MessageSquare },
+  { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/admin/users', label: 'Users', icon: Users },
+  { to: '/admin/upload', label: 'Upload Data', icon: Upload },
+  { to: '/admin/changes', label: 'Org Changes', icon: GitCompare },
+  { to: '/admin/messaging', label: 'Messaging', icon: MessageSquare },
 ];
 
 export default function Navbar() {
@@ -20,10 +20,10 @@ export default function Navbar() {
       <div className="navbar-inner">
         {/* Brand */}
         <NavLink to="/admin/dashboard" className="navbar-brand">
-          <Logo size={36} />
+          <Logo size={42} />
           <div className="brand-text">
             <span className="brand-name">KeyMart</span>
-            <span className="brand-sub">Global</span>
+            <span className="brand-sub">GLOBAL</span>
           </div>
         </NavLink>
 

@@ -1,10 +1,18 @@
-// Keymart Global SVG Logo inline component
-export default function Logo({ size = 36 }: { size?: number }) {
+// KeyMart Global — Logo using actual brand image (transparent PNG)
+interface LogoProps {
+  size?: number;
+  className?: string;
+}
+
+export default function Logo({ size = 40, className = '' }: LogoProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="48" height="48" rx="12" fill="#e8003d"/>
-      <text x="8" y="34" fontFamily="Inter,sans-serif" fontWeight="900" fontSize="24" fill="white">K</text>
-      <circle cx="37" cy="14" r="5" fill="white" opacity="0.9"/>
-    </svg>
+    <img
+      src="/logo.jpeg"
+      alt="KeyMart Global Logo"
+      width={size}
+      height={size}
+      className={className}
+      style={{ objectFit: 'contain', display: 'block', filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.5))' }}
+    />
   );
 }

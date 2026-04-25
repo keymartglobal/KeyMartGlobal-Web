@@ -34,30 +34,30 @@
 }
 
 .reg-brand-logo {
-  width: 38px;
-  height: 38px;
-  background: linear-gradient(135deg, #00A19B 0%, #008f89 100%);
-  border-radius: 10px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
-  font-weight: 900;
-  color: #fff;
-  letter-spacing: -0.02em;
-  box-shadow: 0 4px 16px rgba(0,161,155,0.3);
+  /* Logo image is handled by Logo component */
 }
 
 .reg-brand-name {
-  font-size: 1.05rem;
+  font-size: 1.25rem;
   font-weight: 800;
-  color: #f0ede8;
-  letter-spacing: -0.02em;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+  line-height: 1;
 }
 
 .reg-brand-name span {
-  color: #00A19B;
-  margin-left: 1px;
+  display: block;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #C9A84C;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-top: 2px;
 }
 
 .reg-topnav { display: flex; align-items: center; gap: 2rem; }

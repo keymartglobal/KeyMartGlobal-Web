@@ -6,6 +6,7 @@
 import { useState } from 'react';
 import { ArrowRight, CheckCircle2, User, Mail, Phone, Zap, Shield, Layers, Activity } from 'lucide-react';
 import { registerCustomer } from '../services/api';
+import Logo from '../components/Logo';
 import './Register.css';
 
 const DURATION_OPTIONS = ['1 Month', '3 Months', '6 Months', '1 Year'];
@@ -113,8 +114,10 @@ export default function Register() {
       {/* ── Top Bar ──────────────────────────────────────────── */}
       <header className="reg-topbar">
         <div className="reg-brand">
-          <div className="reg-brand-logo">K</div>
-          <span className="reg-brand-name">KeyMart<span>Global</span></span>
+          <div className="reg-brand-logo">
+            <Logo size={44} />
+          </div>
+          <span className="reg-brand-name">Keymart<span>GLOBAL</span></span>
         </div>
         <nav className="reg-topnav">
           <a href="/register" className="reg-topnav-link active">Register License</a>
