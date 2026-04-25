@@ -76,7 +76,8 @@ export default function Status() {
           )}
 
           {/* ── Result State ───────────────────────────────────── */}
-          {result && <div className="status-result-area fade-in">
+          {result && (
+            <div className="status-result-area fade-in">
               <div className="status-pill-container">
                 <div className={`status-pill ${result.Status?.toLowerCase() === 'active' ? 'active' : 'inactive'}`}>
                   {result.Status?.toUpperCase() || 'UNKNOWN'}
