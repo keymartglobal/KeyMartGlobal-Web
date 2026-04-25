@@ -29,7 +29,7 @@ export const registerCustomer = (data: {
 }) => api.post('/api/register', data);
 
 export const getAllCustomers = () => api.get('/api/customers');
-export const searchCustomer = (gmail: string) => api.get(`/api/search?gmail=${encodeURIComponent(gmail)}`);
+export const checkStatus = (gmail: string) => api.get(`/api/status?gmail=${encodeURIComponent(gmail)}`);
 
 export const updateCustomerPhone = (data: { gmail: string; phone: string }) => 
   api.put('/api/customers/phone', data);

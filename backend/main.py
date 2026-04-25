@@ -159,7 +159,7 @@ def update_phone(data: UpdatePhoneRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/search", tags=["Registration"])
+@app.get("/api/status", tags=["Registration"])
 def search_customer(gmail: str):
     """Search for a customer by Gmail across Sheet 1 and Sheet 2."""
     try:

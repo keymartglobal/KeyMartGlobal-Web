@@ -19,7 +19,7 @@ import Register from './pages/Register';
 import AdminUpload from './pages/AdminUpload';
 import OrgChanges from './pages/OrgChanges';
 import Messaging from './pages/Messaging';
-import Search from './pages/Search';
+import Status from './pages/Status';
 import Users from './pages/Users';
 import './index.css';
 
@@ -58,8 +58,8 @@ export default function App() {
         {/* ── Public client registration page ─────────────────── */}
         <Route path="/register" element={<Register />} />
 
-        {/* ── Public client search page ───────────────────────── */}
-        <Route path="/search" element={<Search />} />
+        {/* ── Public client status page ───────────────────────── */}
+        <Route path="/status" element={<Status />} />
 
         {/* ── Admin: /admin redirects into /admin/dashboard ────── */}
         <Route

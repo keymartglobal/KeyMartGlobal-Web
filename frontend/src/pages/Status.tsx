@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Search as SearchIcon, Mail, Shield, ShieldAlert, CheckCircle2, Box, Briefcase, Activity } from 'lucide-react';
-import { searchCustomer } from '../services/api';
+import { Mail, Search as SearchIcon, Shield, ShieldAlert, CheckCircle2, Box, Briefcase, Activity } from 'lucide-react';
+import { checkStatus } from '../services/api';
 import './Register.css'; // Reusing the global standalone page styles
 
-export default function Search() {
+export default function Status() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -18,7 +18,7 @@ export default function Search() {
     setResult(null);
 
     try {
-      const res = await searchCustomer(email);
+      const res = await checkStatus(email);
       if (res.data && res.data.adobe_data) {
         setResult(res.data.adobe_data);
       } else {
@@ -40,7 +40,7 @@ export default function Search() {
           <span className="reg-brand-name">KeyMart<span>Global</span></span>
         </div>
         <nav className="reg-topnav">
-          <a href="/search" className="reg-topnav-link active">Search Status</a>
+          <a href="/status" className="reg-topnav-link active">Search Status</a>
         </nav>
       </header>
 
