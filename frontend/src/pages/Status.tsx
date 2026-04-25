@@ -76,8 +76,7 @@ export default function Status() {
           )}
 
           {/* ── Result State ───────────────────────────────────── */}
-          {result && (
-            <div className="status-result-area fade-in">
+          {result && <div className="status-result-area fade-in">
               <div className="status-pill-container">
                 <div className={`status-pill ${result.Status?.toLowerCase() === 'active' ? 'active' : 'inactive'}`}>
                   {result.Status?.toUpperCase() || 'UNKNOWN'}
@@ -88,13 +87,15 @@ export default function Status() {
                 {/* Organization Row */}
                 <div className="sd-org-row">
                   <div className="sd-org-icon-wrap">
-                    <Building2 size={22} className="sd-org-icon" />
+                    <Building2 size={24} className="sd-org-icon" />
                   </div>
                   <div className="sd-org-text">
                     <span className="sd-label">ORGANIZATION</span>
-                    <span className="sd-value">{result.Organization || 'N/A'}</span>
+                    <span className="sd-value-large">{result.Organization || 'N/A'}</span>
                   </div>
                 </div>
+
+                <div className="sd-divider" />
 
                 {/* Plan Row */}
                 <div className="sd-plan-row">
@@ -324,14 +325,28 @@ export default function Status() {
           font-size: 0.7rem;
           color: #64748b;
           text-transform: uppercase;
-          letter-spacing: 0.05em;
-          font-weight: 600;
+          letter-spacing: 0.08em;
+          font-weight: 700;
         }
 
         .sd-value {
           font-size: 1.1rem;
           font-weight: 700;
           color: #f1f5f9;
+        }
+
+        .sd-value-large {
+          font-size: 1.45rem;
+          font-weight: 800;
+          color: #ffffff;
+          letter-spacing: -0.02em;
+          line-height: 1.2;
+        }
+
+        .sd-divider {
+          height: 1px;
+          background: rgba(255, 255, 255, 0.06);
+          margin: 1.25rem 0;
         }
 
         .sd-plan-row {
