@@ -177,6 +177,7 @@ class SheetsService:
             data.get("gmail", ""),
             data.get("duration", ""),
             timestamp,
+        ])
         logger.info(f"Customer added to Sheet 1: {data.get('gmail')}")
 
     def update_customer_phone(self, gmail: str, phone: str):
