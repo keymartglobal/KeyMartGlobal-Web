@@ -31,7 +31,7 @@ interface FormState {
 export default function Register() {
   const [form, setForm] = useState<FormState>({
     name: '',
-    countryCode: '+94',
+    countryCode: '+91',
     phone: '',
     gmail: '',
     duration: '1 Month',
