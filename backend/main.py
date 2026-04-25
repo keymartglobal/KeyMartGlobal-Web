@@ -242,6 +242,35 @@ def get_organizations():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/api/admin/all-users", tags=["Admin"])
+def get_all_merged_users():
+    """Get all unique users merged from Sheet 2 and their phones from Sheet 1."""
+    try:
+        adobe_users = sheets.get_all_adobe_data()
+        customers = sheets.get_all_customers()
+        
+        gmail_to_phone = {c["Gmail"].strip().lower(): c["Phone"] for c in customers if c.get("Gmail") and c.get("Phone")}
+        
+        unique_users = {}
+        for user in adobe_users:
+            gmail = user.get("Email", "").strip()
+            if not gmail:
+                continue
+            gmail_lower = gmail.lower()
+            if gmail_lower not in unique_users:
+                unique_users[gmail_lower] = {
+                    "gmail": gmail,
+                    "phone": gmail_to_phone.get(gmail_lower, "Not found"),
+                    "organization": user.get("Organization", "N/A"),
+                    "duration_days": user.get("Days Left", "N/A"),
+                }
+        
+        return {"success": True, "users": list(unique_users.values()), "count": len(unique_users)}
+    except Exception as e:
+        logger.error(f"Failed to fetch all users: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 #  ORG CHANGES ENDPOINTS (Sheet 3)
 # ══════════════════════════════════════════════════════════════════════════════

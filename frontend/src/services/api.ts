@@ -45,6 +45,7 @@ export const uploadAdobeData = (file: File) => {
 
 export const getAdobeData = () => api.get('/api/adobe-data');
 export const getOrganizations = () => api.get('/api/organizations');
+export const getAllMergedUsers = () => api.get('/api/admin/all-users');
 
 // ── Org Changes ───────────────────────────────────────────────────────────────
 export const getOrgChanges = () => api.get('/api/org-changes');

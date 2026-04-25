@@ -20,6 +20,7 @@ import AdminUpload from './pages/AdminUpload';
 import OrgChanges from './pages/OrgChanges';
 import Messaging from './pages/Messaging';
 import Search from './pages/Search';
+import Users from './pages/Users';
 import './index.css';
 
 /** Wraps all admin sub-pages with password guard + navbar */
@@ -86,6 +87,10 @@ export default function App() {
         <Route
           path="/admin/messaging"
           element={<AdminLayout><Messaging /></AdminLayout>}
+        />
+        <Route
+          path="/admin/users"
+          element={<AdminLayout><Users /></AdminLayout>}
         />
 
         {/* ── Fallback: anything unknown → /register ───────────── */}
