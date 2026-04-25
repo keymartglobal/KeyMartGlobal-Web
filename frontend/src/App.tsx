@@ -19,6 +19,7 @@ import Register from './pages/Register';
 import AdminUpload from './pages/AdminUpload';
 import OrgChanges from './pages/OrgChanges';
 import Messaging from './pages/Messaging';
+import Search from './pages/Search';
 import './index.css';
 
 /** Wraps all admin sub-pages with password guard + navbar */
@@ -55,6 +56,9 @@ export default function App() {
 
         {/* ── Public client registration page ─────────────────── */}
         <Route path="/register" element={<Register />} />
+
+        {/* ── Public client search page ───────────────────────── */}
+        <Route path="/search" element={<Search />} />
 
         {/* ── Admin: /admin redirects into /admin/dashboard ────── */}
         <Route
