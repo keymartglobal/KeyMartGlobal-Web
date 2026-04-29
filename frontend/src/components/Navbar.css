@@ -3,11 +3,11 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(8, 12, 24, 0.88);
+  background: rgba(255, 255, 255, 0.88);
   backdrop-filter: blur(28px);
   -webkit-backdrop-filter: blur(28px);
-  border-bottom: 1px solid rgba(0, 161, 155, 0.14);
-  box-shadow: 0 1px 32px rgba(0, 0, 0, 0.4);
+  border-bottom: 1px solid rgba(0, 161, 155, 0.15);
+  box-shadow: 0 1px 32px rgba(0, 0, 0, 0.05);
 }
 
 .navbar-inner {
@@ -38,7 +38,7 @@
 .brand-name {
   font-size: 1.2rem;
   font-weight: 800;
-  color: #ffffff;
+  color: #0f172a;
   letter-spacing: -0.01em;
   line-height: 1;
 }
@@ -69,21 +69,21 @@
   border-radius: 8px;
   font-size: 0.85rem;
   font-weight: 500;
-  color: #6b7a99;
+  color: #64748b;
   text-decoration: none;
   transition: all 0.2s ease;
   white-space: nowrap;
 }
 
 .nav-link:hover {
-  color: #f0ede8;
-  background: rgba(0, 161, 155, 0.08);
+  color: #0f172a;
+  background: rgba(0, 161, 155, 0.05);
 }
 
 .nav-link.active {
-  color: #00A19B;
-  background: rgba(0, 161, 155, 0.12);
-  border: 1px solid rgba(0, 161, 155, 0.2);
+  color: #008f89;
+  background: rgba(0, 161, 155, 0.08);
+  border: 1px solid rgba(0, 161, 155, 0.15);
 }
 
 /* ── Right Side ────────────────────────────────────────────── */
@@ -113,12 +113,12 @@
   align-items: center;
   gap: 0.4rem;
   padding: 0.35rem 0.75rem;
-  background: rgba(26, 58, 143, 0.15);
-  border: 1px solid rgba(35, 72, 176, 0.3);
+  background: rgba(26, 58, 143, 0.08);
+  border: 1px solid rgba(35, 72, 176, 0.2);
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 600;
-  color: #7eb3ff;
+  color: #2348b0;
 }
 
 /* ── Responsive ────────────────────────────────────────────── */

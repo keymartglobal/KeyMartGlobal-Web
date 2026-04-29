@@ -108,7 +108,7 @@ export default function AdminGuard({ children }: Props) {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: #080c18;
+          background: #f8fafc;
           background-image:
             radial-gradient(ellipse 70% 50% at 20% -10%, rgba(0,161,155,0.08) 0%, transparent 60%),
             radial-gradient(ellipse 50% 40% at 80% 110%, rgba(26,58,143,0.07) 0%, transparent 60%);
@@ -116,14 +116,14 @@ export default function AdminGuard({ children }: Props) {
         }
 
         .ag-card {
-          background: #111827;
+          background: #ffffff;
           border: 1px solid rgba(0,161,155,0.15);
           border-radius: 20px;
           padding: 2.5rem;
           width: 100%;
           max-width: 420px;
           text-align: center;
-          box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,161,155,0.06);
+          box-shadow: 0 20px 60px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,161,155,0.06);
         }
 
         @keyframes shake {
@@ -146,7 +146,7 @@ export default function AdminGuard({ children }: Props) {
         .ag-brand-name {
           font-size: 1.3rem;
           font-weight: 800;
-          color: #ffffff;
+          color: #0f172a;
           letter-spacing: -0.01em;
           line-height: 1;
         }
@@ -183,12 +183,12 @@ export default function AdminGuard({ children }: Props) {
           font-weight: 800;
           letter-spacing: -0.02em;
           margin-bottom: 0.4rem;
-          color: #f0ede8;
+          color: #0f172a;
         }
 
         .ag-desc {
           font-size: 0.84rem;
-          color: #6b7a99;
+          color: #64748b;
           margin-bottom: 1.5rem;
         }
 
@@ -227,7 +227,7 @@ export default function AdminGuard({ children }: Props) {
           border: 1px solid rgba(0,161,155,0.15);
           border-radius: 10px;
           padding: 0.825rem 3rem 0.825rem 2.75rem;
-          color: #f0ede8;
+          color: #0f172a;
           font-size: 0.95rem;
           font-family: inherit;
           outline: none;
@@ -239,7 +239,7 @@ export default function AdminGuard({ children }: Props) {
           box-shadow: 0 0 0 3px rgba(0,161,155,0.12);
           background: rgba(0,161,155,0.07);
         }
-        .ag-input::placeholder { color: #6b7a99; letter-spacing: 0; }
+        .ag-input::placeholder { color: #64748b; letter-spacing: 0; }
 
         .ag-eye-btn {
           position: absolute;
@@ -252,7 +252,7 @@ export default function AdminGuard({ children }: Props) {
           padding: 0.2rem;
           transition: color 0.2s;
         }
-        .ag-eye-btn:hover { color: #b8c4d8; }
+        .ag-eye-btn:hover { color: #334155; }
 
         .ag-submit {
           display: flex;

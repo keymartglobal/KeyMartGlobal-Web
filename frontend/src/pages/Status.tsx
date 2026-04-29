@@ -114,7 +114,7 @@ export default function Status() {
       <style>{`
         .status-page {
           min-height: 100vh;
-          background: #0a0d14;
+          background: #f8fafc;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -159,25 +159,25 @@ export default function Status() {
         .status-title {
           font-size: 1.75rem;
           font-weight: 800;
-          color: #ffffff;
+          color: #0f172a;
           margin: 0 0 0.5rem 0;
           letter-spacing: -0.02em;
         }
 
         .status-subtitle {
           font-size: 0.95rem;
-          color: #6b7a99;
+          color: #64748b;
           margin: 0;
         }
 
         /* Main Card */
         .status-card {
           width: 100%;
-          background: #111827;
+          background: #ffffff;
           border-radius: 24px;
           padding: 2rem;
-          border: 1px solid rgba(0, 161, 155, 0.15);
-          box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(0,161,155,0.06);
+          border: 1px solid rgba(0, 161, 155, 0.2);
+          box-shadow: 0 20px 40px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,161,155,0.06);
         }
 
         .status-form {
@@ -192,7 +192,7 @@ export default function Status() {
           border: 1px solid rgba(0, 161, 155, 0.15);
           border-radius: 12px;
           padding: 1rem 1.25rem;
-          color: #f0ede8;
+          color: #0f172a;
           font-size: 1rem;
           outline: none;
           transition: all 0.2s ease;
@@ -205,7 +205,7 @@ export default function Status() {
         }
 
         .status-input::placeholder {
-          color: #6b7a99;
+          color: #64748b;
         }
 
         .status-submit {
@@ -251,10 +251,10 @@ export default function Status() {
         .status-error {
           margin-top: 1.5rem;
           padding: 1rem;
-          background: rgba(239, 68, 68, 0.08);
+          background: rgba(239, 68, 68, 0.1);
           border: 1px solid rgba(239, 68, 68, 0.2);
           border-radius: 12px;
-          color: #fca5a5;
+          color: #ef4444;
           font-size: 0.85rem;
           display: flex;
           gap: 0.5rem;
@@ -294,10 +294,11 @@ export default function Status() {
         }
 
         .status-details-box {
-          background: rgba(0, 161, 155, 0.04);
-          border: 1px solid rgba(0, 161, 155, 0.14);
+          background: #ffffff;
+          border: 1px solid rgba(0, 161, 155, 0.2);
           border-radius: 16px;
           padding: 1.5rem;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.03);
         }
 
         .sd-org-row {
@@ -334,12 +335,12 @@ export default function Status() {
           font-weight: 700;
         }
 
-        .sd-value { font-size: 1.1rem; font-weight: 700; color: #f0ede8; }
+        .sd-value { font-size: 1.1rem; font-weight: 700; color: #0f172a; }
 
         .sd-value-large {
           font-size: 1.5rem;
           font-weight: 800;
-          color: #ffffff;
+          color: #0f172a;
           letter-spacing: -0.025em;
           line-height: 1.2;
         }
@@ -353,11 +354,11 @@ export default function Status() {
         }
 
         .sd-plan-box {
-          background: rgba(0, 161, 155, 0.06);
+          background: rgba(0, 161, 155, 0.04);
           border: 1px solid rgba(0, 161, 155, 0.15);
           padding: 0.75rem 1rem;
           border-radius: 8px;
-          color: #f0ede8;
+          color: #0f172a;
           font-size: 0.9rem;
           font-weight: 500;
         }

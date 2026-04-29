@@ -7,7 +7,7 @@ interface LogoProps {
 export default function Logo({ size = 40, className = '' }: LogoProps) {
   return (
     <img
-      src="/logo.jpeg"
+      src="/logo.png"
       alt="KeyMart Global Logo"
       width={size}
       height={size}
