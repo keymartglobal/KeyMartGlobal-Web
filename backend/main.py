@@ -6,11 +6,12 @@ Entry point for the backend. Registers all routes, middleware, and starts the sc
 
 import os
 import logging
+import threading
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
-from typing import Optional
+from typing import Optional, Literal
 
 from services.sheets_service import SheetsService
 from services.whatsapp_service import WhatsAppService
@@ -409,3 +410,72 @@ async def test_whatsapp(req: TestMessageRequest):
 def health_check():
     """Health check endpoint."""
     return {"status": "healthy", "service": "KeyMart Global API", "version": "2.0.0"}
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  WHATSAPP AUTOMATION ENGINE CONTROL
+# ══════════════════════════════════════════════════════════════════════════════
+
+from core.config import automation_config
+from core.engine_controller import get_engine
+from services.processor import run_automation
+from utils.template_engine import DEFAULT_TEMPLATE
+
+
+class EngineRequest(BaseModel):
+    mode: Literal["META_API", "SELENIUM"]
+
+
+class AutomationRequest(BaseModel):
+    template: Optional[str] = None  # uses DEFAULT_TEMPLATE if omitted
+
+
+@app.post("/api/automation/set-engine", tags=["Automation"])
+def set_engine(req: EngineRequest):
+    """Select the active messaging engine (META_API or SELENIUM)."""
+    if automation_config.is_running:
+        raise HTTPException(status_code=409, detail="Cannot switch engine while automation is running. Stop it first.")
+    automation_config.active_engine = req.mode
+    logger.info(f"Engine switched to: {req.mode}")
+    return {"success": True, "active_engine": req.mode}
+
+
+@app.post("/api/automation/start", tags=["Automation"])
+def start_automation(req: AutomationRequest):
+    """Start the WhatsApp automation using the selected engine."""
+    if automation_config.is_running:
+        raise HTTPException(status_code=409, detail="Automation is already running.")
+
+    automation_config.is_running = True
+    automation_config.reset_stats()
+    template = req.template or DEFAULT_TEMPLATE
+
+    t = threading.Thread(
+        target=run_automation,
+        args=(sheets, template),
+        daemon=True,
+        name="wa-automation",
+    )
+    t.start()
+    logger.info(f"Automation started with engine: {automation_config.active_engine}")
+    return {"success": True, "message": "Automation started.", "engine": automation_config.active_engine}
+
+
+@app.post("/api/automation/stop", tags=["Automation"])
+def stop_automation():
+    """Signal the running automation to stop gracefully."""
+    if not automation_config.is_running:
+        return {"success": True, "message": "Automation was not running."}
+    automation_config.is_running = False
+    logger.info("Automation stop signal sent.")
+    return {"success": True, "message": "Stop signal sent. Automation will halt after the current message."}
+
+
+@app.get("/api/automation/status", tags=["Automation"])
+def get_automation_status():
+    """Get the current automation status and message log."""
+    return {
+        "success": True,
+        **automation_config.get_status(),
+        "logs": automation_config.logs[-100:],   # last 100 entries
+    }

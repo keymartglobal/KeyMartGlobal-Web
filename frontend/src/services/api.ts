@@ -60,5 +60,13 @@ export const getUsersForMessaging = (organization: string) =>
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 export const getDashboardStats = () => api.get('/api/dashboard/stats');
 
+// ── Automation Engine Control ─────────────────────────────────────────────────
+export const setAutomationEngine = (mode: 'META_API' | 'SELENIUM') =>
+  api.post('/api/automation/set-engine', { mode });
+export const startAutomation = (template?: string) =>
+  api.post('/api/automation/start', { template });
+export const stopAutomation = () => api.post('/api/automation/stop');
+export const getAutomationStatus = () => api.get('/api/automation/status');
+
 // ── Test ──────────────────────────────────────────────────────────────────────
 export const healthCheck = () => api.get('/api/health');

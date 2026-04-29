@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getOrganizations, getUsersForMessaging, sendMessageToOrg, updateCustomerPhone } from '../services/api';
+import AutomationPanel from '../components/AutomationPanel';
 
 interface Recipient {
   gmail: string;
@@ -372,6 +373,10 @@ export default function Messaging() {
         @keyframes spin { to { transform: rotate(360deg); } }
         .spin-icon { animation: spin 1s linear infinite; }
       `}</style>
+
+      {/* ── Automation Engine Panel ───────────────────────────────────────── */}
+      <AutomationPanel />
+
     </main>
   );
 }
