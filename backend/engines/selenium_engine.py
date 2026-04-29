@@ -30,6 +30,7 @@ SEND_BUTTON_XPATHS = [
     '//button[@data-testid="compose-btn-send"]',
     '//*[@data-icon="send"]',
     '//span[@data-icon="send"]',
+    '//button[contains(@class,"send")]',
 ]
 
 # ── XPath for the chat input box ──────────────────────────────────────────────
@@ -42,9 +43,12 @@ INPUT_XPATHS = [
 
 # ── XPath to confirm WhatsApp Web finished loading ───────────────────────────
 LOADED_XPATHS = [
+    '//div[@aria-label="Search or start new chat"]',
     '//div[@aria-label="Search input textbox"]',
     '//div[@data-testid="chat-list"]',
-    '//header//div[contains(@class,"copyable-text")]',
+    '//button[@aria-label="New chat"]',
+    '//div[@role="textbox"]',
+    '//div[@data-tab="3"]',
 ]
 
 

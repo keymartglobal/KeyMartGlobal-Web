@@ -33,20 +33,38 @@ QR_WAIT    = 240                   # seconds to wait for QR scan (first-time onl
 
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _is_logged_in(driver) -> bool:
-    """Return True if WhatsApp Web chat list is visible (already logged in)."""
+# ── Broad set of XPaths that indicate WhatsApp Web is fully loaded ────────────
+_WA_LOADED_XPATHS = [
+    '//div[@aria-label="Search or start new chat"]',
+    '//div[@aria-label="Search input textbox"]',
+    '//div[@data-testid="chat-list"]',
+    '//button[@aria-label="New chat"]',
+    '//div[@role="textbox"]',
+    '//div[@data-tab="3"]',         # chat list panel tab
+    '//div[contains(@class,"_aside")]',
+]
+
+
+def _is_logged_in(driver, timeout: int = 15) -> bool:
+    """
+    Return True if WhatsApp Web shows the main chat UI (i.e. user is logged in).
+    Tries multiple XPaths with a combined timeout.
+    """
     from selenium.webdriver.common.by import By
     from selenium.webdriver.support.ui import WebDriverWait
     from selenium.webdriver.support import expected_conditions as EC
-    try:
-        WebDriverWait(driver, 8).until(
-            EC.presence_of_element_located(
-                (By.XPATH, '//div[@aria-label="Search input textbox"] | //div[@data-testid="chat-list"]')
-            )
-        )
-        return True
-    except Exception:
-        return False
+
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        for xpath in _WA_LOADED_XPATHS:
+            try:
+                WebDriverWait(driver, 2).until(
+                    EC.presence_of_element_located((By.XPATH, xpath))
+                )
+                return True          # found one — we're logged in
+            except Exception:
+                continue
+    return False
 
 
 def run_test():
