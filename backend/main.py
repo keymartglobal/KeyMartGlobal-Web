@@ -300,41 +300,11 @@ async def trigger_comparison(background_tasks: BackgroundTasks):
 #  WHATSAPP MESSAGING ENDPOINTS
 # ══════════════════════════════════════════════════════════════════════════════
 
-def _bg_send_manual_messages(recipients: list, raw_message: str, org: str):
-    from core.config import automation_config
-    from core.engine_controller import get_engine
-    from utils.template_engine import render
-
-    try:
-        engine = get_engine(automation_config.active_engine)
-    except Exception as e:
-        logger.error(f"Failed to init engine [{automation_config.active_engine}]: {e}")
-        return
-
-    logger.info(f"[{automation_config.active_engine}] Starting manual bulk send to {len(recipients)} users in '{org}'")
-
-    for r in recipients:
-        phone = r["phone"]
-        gmail = r["gmail"]
-        
-        # Render the template in case {gmail} etc. is used
-        message = render(raw_message, gmail=gmail)
-
-        try:
-            engine.send_message(phone, message)
-            automation_config.log(phone, gmail, automation_config.active_engine, "success")
-            logger.info(f"[{automation_config.active_engine}] ✅ Sent to {gmail} ({phone})")
-        except Exception as e:
-            automation_config.log(phone, gmail, automation_config.active_engine, "failed", str(e))
-            logger.error(f"[{automation_config.active_engine}] ❌ Failed to send to {gmail}: {e}")
-
-    logger.info(f"[{automation_config.active_engine}] Bulk send for '{org}' complete.")
-
-
 @app.post("/api/messages/send", tags=["Messaging"])
 async def send_whatsapp_to_org(req: SendMessageRequest, background_tasks: BackgroundTasks):
     """
     Send a WhatsApp message to all users in a specific organization.
+    Routes through the active engine (Selenium or Meta API) set in Settings.
     Maps Gmail → Phone from Sheet 1 before sending.
     """
     logger.info(f"Send message request for org: {req.organization}")
@@ -346,31 +316,68 @@ async def send_whatsapp_to_org(req: SendMessageRequest, background_tasks: Backgr
 
         # Map Gmail → Phone from Sheet 1
         customers = sheets.get_all_customers()
-        gmail_to_phone = {c["Gmail"]: c["Phone"] for c in customers if c.get("Gmail") and c.get("Phone")}
+        gmail_to_phone = {
+            c["Gmail"].strip().lower(): c["Phone"]
+            for c in customers if c.get("Gmail") and c.get("Phone")
+        }
 
         # Build recipient list
         recipients = []
         for user in adobe_users:
-            gmail = user.get("Email", "")
-            phone = gmail_to_phone.get(gmail)
+            gmail = user.get("Email", "").strip()
+            phone = gmail_to_phone.get(gmail.lower())
             if phone:
                 recipients.append({"gmail": gmail, "phone": phone})
 
         if not recipients:
-            raise HTTPException(status_code=404, detail="No matching phone numbers found for users in this organization.")
+            raise HTTPException(
+                status_code=404,
+                detail="No matching phone numbers found. Make sure phone numbers are in Sheet 1."
+            )
 
-        # Send messages in background using the globally configured active engine
-        background_tasks.add_task(
-            _bg_send_manual_messages,
-            recipients=recipients,
-            raw_message=req.message,
-            org=req.organization,
-        )
+        # ── Dispatch via the active engine (NOT the old Meta API service) ─────
+        def _dispatch():
+            from core.engine_controller import get_engine
+            from core.config import automation_config
+            import re, random, time
+
+            engine_name = automation_config.active_engine
+            logger.info(f"[{engine_name}] Dispatching {len(recipients)} messages for '{req.organization}'")
+
+            try:
+                eng = get_engine(engine_name)
+            except Exception as e:
+                logger.error(f"Engine init failed [{engine_name}]: {e}")
+                return
+
+            success_count = 0
+            fail_count = 0
+            for r in recipients:
+                phone = re.sub(r"\D", "", r["phone"])
+                if len(phone) == 10:
+                    phone = "91" + phone      # add India code if bare 10-digit
+
+                try:
+                    eng.send_message(phone, req.message)
+                    automation_config.log(phone, r["gmail"], engine_name, "success")
+                    success_count += 1
+                    logger.info(f"[{engine_name}] ✅ {r['gmail']} ({phone})")
+                except Exception as e:
+                    automation_config.log(phone, r["gmail"], engine_name, "failed", str(e))
+                    fail_count += 1
+                    logger.warning(f"[{engine_name}] ❌ {r['gmail']} — {e}")
+
+                time.sleep(random.uniform(2, 5))    # anti-ban delay
+
+            logger.info(f"[{engine_name}] Done: {success_count} sent, {fail_count} failed.")
+
+        background_tasks.add_task(_dispatch)
 
         return {
             "success": True,
             "message": f"Messages queued for {len(recipients)} recipients in '{req.organization}'.",
             "recipient_count": len(recipients),
+            "engine": automation_config.active_engine,
         }
 
     except HTTPException:
@@ -378,6 +385,7 @@ async def send_whatsapp_to_org(req: SendMessageRequest, background_tasks: Backgr
     except Exception as e:
         logger.error(f"Messaging failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 @app.get("/api/messages/users/{organization}", tags=["Messaging"])
