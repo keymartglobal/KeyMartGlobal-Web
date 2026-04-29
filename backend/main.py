@@ -300,6 +300,37 @@ async def trigger_comparison(background_tasks: BackgroundTasks):
 #  WHATSAPP MESSAGING ENDPOINTS
 # ══════════════════════════════════════════════════════════════════════════════
 
+def _bg_send_manual_messages(recipients: list, raw_message: str, org: str):
+    from core.config import automation_config
+    from core.engine_controller import get_engine
+    from utils.template_engine import render
+
+    try:
+        engine = get_engine(automation_config.active_engine)
+    except Exception as e:
+        logger.error(f"Failed to init engine [{automation_config.active_engine}]: {e}")
+        return
+
+    logger.info(f"[{automation_config.active_engine}] Starting manual bulk send to {len(recipients)} users in '{org}'")
+
+    for r in recipients:
+        phone = r["phone"]
+        gmail = r["gmail"]
+        
+        # Render the template in case {gmail} etc. is used
+        message = render(raw_message, gmail=gmail)
+
+        try:
+            engine.send_message(phone, message)
+            automation_config.log(phone, gmail, automation_config.active_engine, "success")
+            logger.info(f"[{automation_config.active_engine}] ✅ Sent to {gmail} ({phone})")
+        except Exception as e:
+            automation_config.log(phone, gmail, automation_config.active_engine, "failed", str(e))
+            logger.error(f"[{automation_config.active_engine}] ❌ Failed to send to {gmail}: {e}")
+
+    logger.info(f"[{automation_config.active_engine}] Bulk send for '{org}' complete.")
+
+
 @app.post("/api/messages/send", tags=["Messaging"])
 async def send_whatsapp_to_org(req: SendMessageRequest, background_tasks: BackgroundTasks):
     """
@@ -328,12 +359,12 @@ async def send_whatsapp_to_org(req: SendMessageRequest, background_tasks: Backgr
         if not recipients:
             raise HTTPException(status_code=404, detail="No matching phone numbers found for users in this organization.")
 
-        # Send messages in background
+        # Send messages in background using the globally configured active engine
         background_tasks.add_task(
-            whatsapp.send_bulk_messages,
+            _bg_send_manual_messages,
             recipients=recipients,
-            message=req.message,
-            organization=req.organization,
+            raw_message=req.message,
+            org=req.organization,
         )
 
         return {
