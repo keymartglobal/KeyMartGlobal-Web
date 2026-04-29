@@ -2,16 +2,17 @@
  * Navbar — global navigation bar with Adobe-style dark design
  */
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Upload, MessageSquare, GitCompare, ShieldCheck, Users } from 'lucide-react';
+import { LayoutDashboard, Upload, MessageSquare, GitCompare, ShieldCheck, Users, Settings } from 'lucide-react';
 import Logo from './Logo';
 import './Navbar.css';
 
 const NAV_ITEMS = [
-  { to: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/admin/users', label: 'Users', icon: Users },
-  { to: '/admin/upload', label: 'Upload Data', icon: Upload },
-  { to: '/admin/changes', label: 'Org Changes', icon: GitCompare },
-  { to: '/admin/messaging', label: 'Messaging', icon: MessageSquare },
+  { to: '/admin/dashboard', label: 'Dashboard',   icon: LayoutDashboard },
+  { to: '/admin/users',     label: 'Users',        icon: Users },
+  { to: '/admin/upload',    label: 'Upload Data',  icon: Upload },
+  { to: '/admin/changes',   label: 'Org Changes',  icon: GitCompare },
+  { to: '/admin/messaging', label: 'Messaging',    icon: MessageSquare },
+  { to: '/admin/settings',  label: 'Settings',     icon: Settings },
 ];
 
 export default function Navbar() {

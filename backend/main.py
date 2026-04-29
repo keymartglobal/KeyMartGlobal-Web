@@ -427,7 +427,35 @@ class EngineRequest(BaseModel):
 
 
 class AutomationRequest(BaseModel):
-    template: Optional[str] = None  # uses DEFAULT_TEMPLATE if omitted
+    template: Optional[str] = None
+
+
+class SettingsRequest(BaseModel):
+    active_engine: Literal["META_API", "SELENIUM"]
+    messaging_mode: Literal["FILE_TRIGGER", "MANUAL"]
+    manual_template: Optional[str] = None
+    file_trigger_template: Optional[str] = None
+
+
+@app.get("/api/automation/settings", tags=["Automation"])
+def get_settings():
+    """Return current engine + messaging settings."""
+    return {"success": True, **automation_config.get_settings()}
+
+
+@app.post("/api/automation/settings", tags=["Automation"])
+def save_settings(req: SettingsRequest):
+    """Persist engine mode, messaging mode, and templates."""
+    if automation_config.is_running:
+        raise HTTPException(status_code=409, detail="Cannot change settings while automation is running.")
+    automation_config.active_engine   = req.active_engine
+    automation_config.messaging_mode  = req.messaging_mode
+    if req.manual_template:
+        automation_config.manual_template = req.manual_template
+    if req.file_trigger_template:
+        automation_config.file_trigger_template = req.file_trigger_template
+    logger.info(f"Settings saved: engine={req.active_engine}, mode={req.messaging_mode}")
+    return {"success": True, "settings": automation_config.get_settings()}
 
 
 @app.post("/api/automation/set-engine", tags=["Automation"])
@@ -448,7 +476,9 @@ def start_automation(req: AutomationRequest):
 
     automation_config.is_running = True
     automation_config.reset_stats()
-    template = req.template or DEFAULT_TEMPLATE
+
+    # Pick template: explicit override > config manual_template > hardcoded default
+    template = req.template or automation_config.manual_template or DEFAULT_TEMPLATE
 
     t = threading.Thread(
         target=run_automation,

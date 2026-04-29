@@ -1,12 +1,10 @@
 """
-KeyMart Global — Comparison Engine
-=====================================
-Core logic for detecting organization changes between the previous and
-new versions of Sheet 2 (Adobe Data). Logs unique transitions to Sheet 3.
+comparison_engine.py — Detects org changes between Sheet 2 snapshots.
+Now: when FILE_TRIGGER mode is active, automatically sends WhatsApp
+notifications to affected users via the configured engine.
 """
-
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Dict
 
 if TYPE_CHECKING:
     from services.sheets_service import SheetsService
@@ -18,68 +16,121 @@ class ComparisonEngine:
     """Detects org changes between two snapshots of Sheet 2 and logs them to Sheet 3."""
 
     def __init__(self, sheets_service: "SheetsService"):
-        """Accept the shared SheetsService instance."""
         self.sheets = sheets_service
 
-    def detect_and_log_changes(self, previous_data: list[dict], new_data: list[dict]):
+    # ── Core Comparison ───────────────────────────────────────────────────────
+
+    def detect_and_log_changes(
+        self,
+        previous_data: List[Dict],
+        new_data: List[Dict],
+    ) -> List[Dict]:
         """
         Compare previous vs new Sheet 2 data.
-        For each Gmail where the Organization field has changed,
-        log the transition [Gmail, From Org, To Org] to Sheet 3.
-
-        Deduplication is handled inside sheets_service.log_org_change().
+        Returns list of change records: {gmail, from_org, to_org}
+        Logs each change to Sheet 3 and (if FILE_TRIGGER mode) sends WhatsApp.
         """
         logger.info("Comparison engine started...")
 
         if not previous_data:
             logger.info("No previous data — skipping comparison (first upload).")
-            return
+            return []
 
-        # Build a lookup map: Gmail → Organization for the old data
         old_map = {
             row.get("Email", "").strip().lower(): row.get("Organization", "").strip()
-            for row in previous_data
-            if row.get("Email")
+            for row in previous_data if row.get("Email")
         }
-
-        # Build a lookup map for the new data
         new_map = {
             row.get("Email", "").strip().lower(): row.get("Organization", "").strip()
-            for row in new_data
-            if row.get("Email")
+            for row in new_data if row.get("Email")
         }
 
-        changes_found = 0
+        changes: List[Dict] = []
 
         for gmail, new_org in new_map.items():
             old_org = old_map.get(gmail)
-
-            # Case 1: Gmail existed before and organization changed
             if old_org and old_org != new_org:
-                logger.info(f"Org change detected: {gmail} [{old_org} → {new_org}]")
+                logger.info(f"Org change: {gmail} [{old_org} → {new_org}]")
                 self.sheets.log_org_change(gmail, old_org, new_org)
-                changes_found += 1
+                changes.append({"gmail": gmail, "from_org": old_org, "to_org": new_org})
 
-            # Case 2: New Gmail not in old data (new user added to org)
-            # We can optionally log these as "New" → current org
-            # Uncomment below to track new additions:
-            # elif not old_org:
-            #     self.sheets.log_org_change(gmail, "New", new_org)
-            #     changes_found += 1
+        logger.info(f"Comparison complete. {len(changes)} change(s) detected.")
 
-        logger.info(f"Comparison complete. {changes_found} org change(s) logged to Sheet 3.")
+        # ── FILE_TRIGGER: Send WhatsApp notifications ─────────────────────────
+        if changes:
+            self._notify_changed_users(changes)
+
+        return changes
+
+    def _notify_changed_users(self, changes: List[Dict]):
+        """
+        For each changed Gmail: look up phone from Sheet 1, render template,
+        send message via the configured engine — but ONLY when FILE_TRIGGER
+        mode is active.
+        """
+        from core.config import automation_config
+        from core.engine_controller import get_engine
+        from utils.template_engine import render
+
+        if automation_config.messaging_mode != "FILE_TRIGGER":
+            logger.info("FILE_TRIGGER mode inactive — skipping auto-notifications.")
+            return
+
+        logger.info(
+            f"FILE_TRIGGER active [{automation_config.active_engine}] — "
+            f"sending notifications to {len(changes)} user(s)."
+        )
+
+        # Build gmail → phone lookup from Sheet 1
+        try:
+            customers = self.sheets.get_all_customers()
+        except Exception as e:
+            logger.error(f"Cannot fetch Sheet 1 for phone lookup: {e}")
+            return
+
+        gmail_to_phone = {
+            c.get("Gmail", "").strip().lower(): c.get("Phone", "").strip()
+            for c in customers if c.get("Gmail") and c.get("Phone")
+        }
+
+        try:
+            engine = get_engine(automation_config.active_engine)
+        except Exception as e:
+            logger.error(f"Cannot initialise engine: {e}")
+            return
+
+        template = automation_config.file_trigger_template
+
+        for change in changes:
+            gmail     = change["gmail"]
+            from_org  = change["from_org"]
+            to_org    = change["to_org"]
+            phone     = gmail_to_phone.get(gmail)
+
+            if not phone:
+                logger.warning(f"No phone for {gmail} — skipping notification.")
+                automation_config.log(
+                    phone or "unknown", gmail,
+                    automation_config.active_engine, "failed",
+                    "No phone number found in Sheet 1"
+                )
+                continue
+
+            message = render(template, gmail=gmail, from_org=from_org, to_org=to_org)
+
+            try:
+                engine.send_message(phone, message)
+                automation_config.log(phone, gmail, automation_config.active_engine, "success")
+                logger.info(f"Notified {gmail} ({phone}) ✅")
+            except Exception as e:
+                automation_config.log(phone, gmail, automation_config.active_engine, "failed", str(e))
+                logger.warning(f"Failed to notify {gmail}: {e}")
 
     def run_full_comparison(self):
-        """
-        Manual trigger: reads current Sheet 2 state and compares with any
-        snapshot cached in memory. For now, compares sheet against itself
-        to validate pipeline.
-        """
+        """Manual trigger: validates pipeline without making false changes."""
         logger.info("Manual full comparison triggered.")
         current_data = self.sheets.get_all_adobe_data()
         if not current_data:
             logger.warning("Sheet 2 is empty — nothing to compare.")
             return
-        # In production, you'd store a snapshot. For manual trigger,
-        # this just validates the pipeline without making false changes.
         logger.info(f"Full comparison complete. {len(current_data)} records checked.")

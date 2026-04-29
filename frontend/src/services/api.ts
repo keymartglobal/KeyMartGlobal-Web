@@ -67,6 +67,13 @@ export const startAutomation = (template?: string) =>
   api.post('/api/automation/start', { template });
 export const stopAutomation = () => api.post('/api/automation/stop');
 export const getAutomationStatus = () => api.get('/api/automation/status');
+export const getAutomationSettings = () => api.get('/api/automation/settings');
+export const saveAutomationSettings = (data: {
+  active_engine: 'META_API' | 'SELENIUM';
+  messaging_mode: 'FILE_TRIGGER' | 'MANUAL';
+  manual_template?: string;
+  file_trigger_template?: string;
+}) => api.post('/api/automation/settings', data);
 
 // ── Test ──────────────────────────────────────────────────────────────────────
 export const healthCheck = () => api.get('/api/health');
