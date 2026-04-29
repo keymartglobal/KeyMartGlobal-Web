@@ -9,7 +9,6 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getOrganizations, getUsersForMessaging, sendMessageToOrg, updateCustomerPhone } from '../services/api';
-import AutomationPanel from '../components/AutomationPanel';
 
 interface Recipient {
   gmail: string;
@@ -117,7 +116,7 @@ export default function Messaging() {
         <div>
           <h1 style={{ fontSize: '1.6rem', marginBottom: '0.4rem' }}>WhatsApp Messaging</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem' }}>
-            Select an organization, preview recipients, compose your message, and send in bulk.
+            <strong>How to send:</strong> (1) Select an organisation → (2) Review recipients → (3) Type your message → (4) Click <strong>Send Messages</strong>.
           </p>
         </div>
         <button className="btn btn-ghost btn-sm" onClick={fetchOrgs} disabled={loadingOrgs}>
@@ -267,36 +266,37 @@ export default function Messaging() {
               />
             </div>
 
-            {sent && (
-              <div className="alert alert-success" style={{ marginTop: '1rem' }}>
-                <CheckCircle2 size={16} />
-                <span>Messages queued! Sending to {reachableCount} recipients in "{selectedOrg}".</span>
-              </div>
-            )}
+              {sent && (
+                <div className="alert alert-success" style={{ marginTop: '1rem' }}>
+                  <CheckCircle2 size={16} />
+                  <span>Messages queued! Sending to {reachableCount} recipients in "{selectedOrg}" via WhatsApp.</span>
+                </div>
+              )}
 
-            <div className="divider" />
+              <div className="divider" />
 
-            <div className="send-bar">
-              <div className="send-info">
-                {selectedOrg ? (
-                  <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                    Will send to <strong style={{ color: 'var(--text-primary)' }}>{reachableCount}</strong> recipient(s) in <strong style={{ color: 'var(--text-primary)' }}>{selectedOrg}</strong>
-                  </span>
-                ) : (
-                  <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Select an organization to enable sending</span>
-                )}
+              <div className="send-bar">
+                <div className="send-info">
+                  {selectedOrg ? (
+                    <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                      Will send to <strong style={{ color: 'var(--text-primary)' }}>{reachableCount}</strong> recipient(s) in <strong style={{ color: 'var(--text-primary)' }}>{selectedOrg}</strong>
+                    </span>
+                  ) : (
+                    <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>← Step 1: Select an organisation first</span>
+                  )}
+                </div>
+                <button
+                  className="btn btn-primary"
+                  onClick={handleSend}
+                  disabled={sending || !selectedOrg || !message.trim()}
+                  title={!selectedOrg ? 'Select an organisation first' : !message.trim() ? 'Type a message first' : `Send to ${reachableCount} recipients`}
+                >
+                  {sending
+                    ? <><div className="spinner" style={{ width: 16, height: 16 }} /> Sending...</>
+                    : <><Send size={16} /> Send Messages</>
+                  }
+                </button>
               </div>
-              <button
-                className="btn btn-primary"
-                onClick={handleSend}
-                disabled={sending || !selectedOrg || !message.trim()}
-              >
-                {sending
-                  ? <><div className="spinner" style={{ width: 16, height: 16 }} /> Sending...</>
-                  : <><Send size={16} /> Send Messages</>
-                }
-              </button>
-            </div>
           </div>
 
           {/* Info */}
@@ -374,8 +374,18 @@ export default function Messaging() {
         .spin-icon { animation: spin 1s linear infinite; }
       `}</style>
 
-      {/* ── Automation Engine Panel ───────────────────────────────────────── */}
-      <AutomationPanel />
+      {/* ── Tip Box ───────────────────────────────────────────────────── */}
+      <div className="alert alert-info" style={{ marginTop: '1.5rem' }}>
+        <AlertCircle size={16} style={{ flexShrink: 0 }} />
+        <div style={{ fontSize: '0.83rem', lineHeight: '1.7' }}>
+          <strong>Quick Guide:</strong><br />
+          • <strong>Step 1 — Select Org:</strong> Choose which Adobe organisation to message.<br />
+          • <strong>Step 2 — Review Recipients:</strong> Verified phone numbers show in green. Edit missing numbers inline.<br />
+          • <strong>Step 3 — Type Message:</strong> The preview on the right updates live as you type.<br />
+          • <strong>Step 4 — Click Send Messages:</strong> Dispatches via the engine set in <a href="/admin/settings" style={{color:'var(--accent-red)'}}>Settings</a> (currently: Selenium).<br />
+          • For <strong>automatic org-change notifications</strong>, enable <em>File Trigger</em> mode in Settings.
+        </div>
+      </div>
 
     </main>
   );
