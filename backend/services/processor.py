@@ -35,7 +35,17 @@ def run_automation(sheets_service, template: str = DEFAULT_TEMPLATE) -> None:
         logger.warning("run_automation called but is_running=False. Aborting.")
         return
 
-    engine: WhatsAppEngine = get_engine(cfg.active_engine)
+    try:
+        engine: WhatsAppEngine = get_engine(cfg.active_engine)
+    except Exception as e:
+        logger.error(
+            f"Failed to initialise engine [{cfg.active_engine}]: {e}. "
+            "On Render: ensure Chrome is installed via the build command. "
+            "Locally: ensure Chrome is installed and not already running."
+        )
+        cfg.is_running = False
+        return
+
     logger.info(f"[{engine.get_name()}] Automation started.")
 
     try:

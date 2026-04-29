@@ -85,10 +85,13 @@ class SeleniumEngine(WhatsAppEngine):
 
     def _init_driver(self):
         try:
+            import platform
             from selenium import webdriver
             from selenium.webdriver.chrome.service import Service
             from selenium.webdriver.chrome.options import Options
             from webdriver_manager.chrome import ChromeDriverManager
+
+            is_server = platform.system() == "Linux" and not os.getenv("DISPLAY", "")
 
             profile_path = os.getenv(
                 "SELENIUM_CHROME_PROFILE_PATH",
@@ -97,8 +100,36 @@ class SeleniumEngine(WhatsAppEngine):
             os.makedirs(profile_path, exist_ok=True)
 
             options = Options()
-            options.add_argument(f"--user-data-dir={profile_path}")
-            options.add_argument("--profile-directory=Default")
+
+            # ── Server (Render / Linux headless) specific flags ───────────────
+            if is_server:
+                options.add_argument("--headless=new")
+                options.add_argument("--no-sandbox")
+                options.add_argument("--disable-dev-shm-usage")
+                options.add_argument("--disable-setuid-sandbox")
+                options.add_argument("--remote-debugging-port=9222")
+                options.add_argument("--disable-extensions")
+                options.add_argument("--disable-background-networking")
+                options.add_argument("--disable-default-apps")
+                options.add_argument("--disable-sync")
+                options.add_argument("--no-first-run")
+                # Try known Linux Chrome binary paths
+                for chrome_bin in [
+                    "/usr/bin/google-chrome-stable",
+                    "/usr/bin/google-chrome",
+                    "/usr/bin/chromium-browser",
+                    "/usr/bin/chromium",
+                    os.getenv("CHROME_BIN", ""),
+                ]:
+                    if chrome_bin and os.path.exists(chrome_bin):
+                        options.binary_location = chrome_bin
+                        logger.info(f"Using Chrome binary: {chrome_bin}")
+                        break
+            else:
+                # Local desktop — persistent profile + visible browser
+                options.add_argument(f"--user-data-dir={profile_path}")
+                options.add_argument("--profile-directory=Default")
+
             options.add_argument("--no-sandbox")
             options.add_argument("--disable-dev-shm-usage")
             options.add_argument("--disable-gpu")
@@ -112,7 +143,8 @@ class SeleniumEngine(WhatsAppEngine):
             self._driver.execute_script(
                 "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
             )
-            logger.info("ChromeDriver initialised successfully.")
+            mode = "HEADLESS SERVER" if is_server else "DESKTOP"
+            logger.info(f"ChromeDriver initialised [{mode}].")
         except Exception as e:
             raise RuntimeError(f"Failed to initialise ChromeDriver: {e}")
 
