@@ -247,3 +247,52 @@ class SeleniumEngine(WhatsAppEngine):
             self._driver = None
         SeleniumEngine._instance = None
         logger.info("Selenium browser closed.")
+
+    # ── QR / Status helpers ───────────────────────────────────────────────────
+
+    def is_wa_logged_in(self, timeout: int = 8) -> bool:
+        """
+        Return True if WhatsApp Web is showing the main chat UI.
+        Safe to call even if driver is mid-load.
+        """
+        if not self._driver:
+            return False
+        try:
+            from selenium.webdriver.common.by import By
+            from selenium.webdriver.support.ui import WebDriverWait
+            from selenium.webdriver.support import expected_conditions as EC
+
+            deadline = time.time() + timeout
+            while time.time() < deadline:
+                for xpath in LOADED_XPATHS:
+                    try:
+                        WebDriverWait(self._driver, 2).until(
+                            EC.presence_of_element_located((By.XPATH, xpath))
+                        )
+                        return True
+                    except Exception:
+                        continue
+            return False
+        except Exception:
+            return False
+
+    def open_wa_for_qr(self):
+        """Navigate to WhatsApp Web so the QR code is shown (for first-time login)."""
+        if self._driver:
+            current = self._driver.current_url
+            if "web.whatsapp.com" not in current:
+                self._driver.get("https://web.whatsapp.com")
+                time.sleep(4)   # let page start loading
+
+    def get_screenshot_base64(self) -> str:
+        """Return a base64-encoded PNG screenshot of the current browser page."""
+        import base64
+        if not self._driver:
+            return ""
+        try:
+            png = self._driver.get_screenshot_as_png()
+            return base64.b64encode(png).decode("utf-8")
+        except Exception as e:
+            logger.warning(f"Screenshot failed: {e}")
+            return ""
+

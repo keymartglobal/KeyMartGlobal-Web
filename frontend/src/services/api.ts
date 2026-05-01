@@ -75,5 +75,10 @@ export const saveAutomationSettings = (data: {
   file_trigger_template?: string;
 }) => api.post('/api/automation/settings', data);
 
+// ── Selenium QR / Status ──────────────────────────────────────────────────────
+export const getSeleniumStatus = () => api.get('/api/selenium/status');
+export const initSelenium = () => api.post('/api/selenium/init');
+export const getSeleniumScreenshot = () => api.get('/api/selenium/screenshot');
+
 // ── Test ──────────────────────────────────────────────────────────────────────
 export const healthCheck = () => api.get('/api/health');

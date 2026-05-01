@@ -1,14 +1,18 @@
 /**
  * Messaging Page — Select organization, preview recipients, compose & send WhatsApp
- * Maps Gmail → Phone from Sheet 1 before sending via WhatsApp Cloud API
+ * Supports Selenium (local Chrome) and Meta API engines.
+ * Shows QR code flow if Selenium needs WhatsApp login.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
-  MessageSquare, Users, Send, ChevronDown,
-  Phone, Mail, RefreshCw, CheckCircle2, AlertCircle, Edit2, Save, X
+  MessageSquare, Users, Send, ChevronDown, Wifi, WifiOff,
+  Phone, Mail, RefreshCw, CheckCircle2, AlertCircle, Edit2, Save, X, Smartphone
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { getOrganizations, getUsersForMessaging, sendMessageToOrg, updateCustomerPhone } from '../services/api';
+import {
+  getOrganizations, getUsersForMessaging, sendMessageToOrg, updateCustomerPhone,
+  getAutomationSettings, getSeleniumStatus, initSelenium, getSeleniumScreenshot,
+} from '../services/api';
 
 interface Recipient {
   gmail: string;
@@ -18,17 +22,93 @@ interface Recipient {
 
 export default function Messaging() {
   const [organizations, setOrganizations] = useState<string[]>([]);
-  const [selectedOrg, setSelectedOrg] = useState('');
-  const [recipients, setRecipients] = useState<Recipient[]>([]);
-  const [message, setMessage] = useState('');
-  const [loadingOrgs, setLoadingOrgs] = useState(false);
-  const [loadingUsers, setLoadingUsers] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [selectedOrg, setSelectedOrg]     = useState('');
+  const [recipients, setRecipients]       = useState<Recipient[]>([]);
+  const [message, setMessage]             = useState('');
+  const [loadingOrgs, setLoadingOrgs]     = useState(false);
+  const [loadingUsers, setLoadingUsers]   = useState(false);
+  const [sending, setSending]             = useState(false);
+  const [sent, setSent]                   = useState(false);
 
-  const [editingPhone, setEditingPhone] = useState<string | null>(null);
+  const [editingPhone, setEditingPhone]   = useState<string | null>(null);
   const [editPhoneValue, setEditPhoneValue] = useState('');
-  const [savingPhone, setSavingPhone] = useState(false);
+  const [savingPhone, setSavingPhone]     = useState(false);
+
+  // ── Selenium QR state ───────────────────────────────────────────────────────
+  const [activeEngine, setActiveEngine]       = useState<'META_API' | 'SELENIUM'>('SELENIUM');
+  const [waLoggedIn, setWaLoggedIn]           = useState<boolean | null>(null); // null = unknown
+  const [qrScreenshot, setQrScreenshot]       = useState<string>('');
+  const [initingSelenium, setInitingSelenium] = useState(false);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Fetch engine setting and initial WA status on mount
+  useEffect(() => {
+    getAutomationSettings().then(r => {
+      setActiveEngine(r.data.active_engine || 'SELENIUM');
+    }).catch(() => {});
+    checkWaStatus();
+  }, []);
+
+  const checkWaStatus = async () => {
+    try {
+      const r = await getSeleniumStatus();
+      setWaLoggedIn(r.data.logged_in);
+      if (r.data.logged_in) {
+        setQrScreenshot('');
+        stopPolling();
+      }
+    } catch {
+      setWaLoggedIn(false);
+    }
+  };
+
+  const startPolling = () => {
+    if (pollRef.current) return;
+    pollRef.current = setInterval(async () => {
+      try {
+        const status = await getSeleniumStatus();
+        if (status.data.logged_in) {
+          setWaLoggedIn(true);
+          setQrScreenshot('');
+          stopPolling();
+          toast.success('WhatsApp connected! You can now send messages.');
+        } else {
+          // Refresh screenshot every poll cycle
+          const ss = await getSeleniumScreenshot();
+          if (ss.data.screenshot) setQrScreenshot(ss.data.screenshot);
+        }
+      } catch { /* ignore */ }
+    }, 4000);
+  };
+
+  const stopPolling = () => {
+    if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+  };
+
+  useEffect(() => () => stopPolling(), []);
+
+  const handleInitSelenium = async () => {
+    setInitingSelenium(true);
+    try {
+      const r = await initSelenium();
+      if (r.data.logged_in) {
+        setWaLoggedIn(true);
+        toast.success('WhatsApp already connected!');
+      } else {
+        // Grab first screenshot immediately, then start polling
+        try {
+          const ss = await getSeleniumScreenshot();
+          if (ss.data.screenshot) setQrScreenshot(ss.data.screenshot);
+        } catch { /* first screenshot may not be ready yet */ }
+        startPolling();
+        toast('Chrome opened. Scan the QR code shown below.', { icon: '📱' });
+      }
+    } catch (e: any) {
+      toast.error(e.response?.data?.detail || 'Failed to start Chrome. Is the backend running locally?');
+    } finally {
+      setInitingSelenium(false);
+    }
+  };
 
 
   const fetchOrgs = async () => {
@@ -123,6 +203,74 @@ export default function Messaging() {
           <RefreshCw size={14} className={loadingOrgs ? 'spin-icon' : ''} /> Refresh Orgs
         </button>
       </div>
+
+      {/* ── WhatsApp Connection Status Banner (Selenium mode) ─────────────── */}
+      {activeEngine === 'SELENIUM' && (
+        <div className={`wa-status-card ${waLoggedIn === true ? 'wa-connected' : 'wa-disconnected'}`}>
+          <div className="wa-status-left">
+            <div className="wa-status-icon">
+              {waLoggedIn === true ? <Wifi size={20} /> : <WifiOff size={20} />}
+            </div>
+            <div>
+              <div className="wa-status-title">
+                {waLoggedIn === true
+                  ? '✅ WhatsApp Web Connected'
+                  : waLoggedIn === false
+                    ? '⚠️ WhatsApp Not Connected'
+                    : '⏳ Checking WhatsApp status…'}
+              </div>
+              <div className="wa-status-sub">
+                {waLoggedIn === true
+                  ? 'Selenium is logged in. Messages will send via Chrome.'
+                  : 'Click "Connect WhatsApp" to open Chrome and scan the QR code once.'}
+              </div>
+            </div>
+          </div>
+          <div className="wa-status-right">
+            <button className="btn btn-ghost btn-sm" onClick={checkWaStatus}>
+              <RefreshCw size={13} /> Refresh
+            </button>
+            {waLoggedIn !== true && (
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={handleInitSelenium}
+                disabled={initingSelenium}
+              >
+                {initingSelenium
+                  ? <><RefreshCw size={13} className="spin-icon" /> Opening…</>
+                  : <><Smartphone size={13} /> Connect WhatsApp</>}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── QR Code Screenshot Panel ─────────────────────────────────────── */}
+      {qrScreenshot && waLoggedIn !== true && (
+        <div className="qr-panel">
+          <div className="qr-header">
+            <Smartphone size={18} />
+            <span>Scan this QR code with your phone's WhatsApp</span>
+            <span className="qr-pulse">● LIVE</span>
+          </div>
+          <div className="qr-body">
+            <img
+              src={`data:image/png;base64,${qrScreenshot}`}
+              alt="WhatsApp Web QR Code"
+              className="qr-image"
+            />
+            <div className="qr-steps">
+              <p>1. Open <strong>WhatsApp</strong> on your phone</p>
+              <p>2. Tap <strong>⋮ Menu</strong> → <strong>Linked Devices</strong></p>
+              <p>3. Tap <strong>Link a Device</strong></p>
+              <p>4. Scan the QR code on the left</p>
+              <p style={{marginTop:'0.75rem', color:'var(--success)'}}>
+                ✅ This panel will close automatically once connected.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="messaging-layout">
         {/* Left: Config Panel */}
@@ -372,6 +520,61 @@ export default function Messaging() {
 
         @keyframes spin { to { transform: rotate(360deg); } }
         .spin-icon { animation: spin 1s linear infinite; }
+
+        /* ── WhatsApp Status Banner ──────────────────────────────── */
+        .wa-status-card {
+          display:flex; align-items:center; justify-content:space-between;
+          gap:1rem; padding:0.875rem 1.25rem; border-radius:14px;
+          margin-bottom:1.25rem; flex-wrap:wrap;
+          border:1.5px solid; transition:all 0.3s;
+        }
+        .wa-connected {
+          background:rgba(16,185,129,0.07);
+          border-color:rgba(16,185,129,0.35);
+        }
+        .wa-disconnected {
+          background:rgba(245,158,11,0.07);
+          border-color:rgba(245,158,11,0.35);
+        }
+        .wa-status-left { display:flex; align-items:center; gap:0.875rem; flex:1; }
+        .wa-status-icon {
+          width:38px; height:38px; border-radius:10px; display:flex;
+          align-items:center; justify-content:center; flex-shrink:0;
+        }
+        .wa-connected .wa-status-icon { background:rgba(16,185,129,0.15); color:#10b981; }
+        .wa-disconnected .wa-status-icon { background:rgba(245,158,11,0.15); color:#f59e0b; }
+        .wa-status-title { font-size:0.88rem; font-weight:700; color:var(--text-primary); }
+        .wa-status-sub { font-size:0.78rem; color:var(--text-muted); margin-top:0.15rem; }
+        .wa-status-right { display:flex; align-items:center; gap:0.5rem; flex-shrink:0; }
+
+        /* ── QR Panel ────────────────────────────────────────────── */
+        .qr-panel {
+          background:rgba(255,255,255,0.03); border:1.5px solid rgba(16,185,129,0.3);
+          border-radius:18px; margin-bottom:1.5rem; overflow:hidden;
+        }
+        .qr-header {
+          display:flex; align-items:center; gap:0.625rem;
+          padding:0.875rem 1.25rem; background:rgba(16,185,129,0.08);
+          border-bottom:1px solid rgba(16,185,129,0.2);
+          font-size:0.85rem; font-weight:700; color:#10b981;
+        }
+        .qr-pulse {
+          margin-left:auto; font-size:0.72rem; color:#10b981;
+          animation:qr-blink 1.2s ease-in-out infinite;
+        }
+        @keyframes qr-blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        .qr-body { display:flex; align-items:center; gap:2rem; padding:1.5rem; flex-wrap:wrap; }
+        .qr-image {
+          width:260px; height:260px; border-radius:12px;
+          border:3px solid rgba(16,185,129,0.4); object-fit:contain;
+          background:#fff; flex-shrink:0;
+        }
+        .qr-steps { flex:1; min-width:200px; }
+        .qr-steps p {
+          font-size:0.85rem; color:var(--text-secondary);
+          margin:0.5rem 0; line-height:1.5;
+        }
+        .qr-steps strong { color:var(--text-primary); }
       `}</style>
 
       {/* ── Tip Box ───────────────────────────────────────────────────── */}

@@ -8,24 +8,25 @@ services:
     name: keymart-global-backend
     runtime: python
     rootDir: backend              # ← points Render to the backend/ subfolder
-    buildCommand: |
-      apt-get update && apt-get install -y wget gnupg unzip curl && \
-      wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && \
-      echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list && \
-      apt-get update && apt-get install -y google-chrome-stable && \
-      pip install -r requirements.txt
-    startCommand: gunicorn main:app -w 2 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT
-    plan: free                    # Change to "starter" for production
+    buildCommand: bash build.sh   # installs Chrome + pip deps
+    startCommand: gunicorn main:app -w 1 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT
+    plan: free
+
+    # ── Persistent Disk (Chrome session storage) ──────────────
+    # Mount /data so the WhatsApp session survives restarts.
+    # Upgrade plan to "starter" for persistent disk support.
+    # disk:
+    #   name: whatsapp-profile
+    #   mountPath: /data/whatsapp_chrome_profile
+    #   sizeGB: 1
 
     # ── Environment Variables ─────────────────────────────────
-    # Set these in the Render dashboard under Environment tab.
-    # DO NOT hardcode secrets here.
     envVars:
       - key: PYTHON_VERSION
         value: "3.11.0"
 
       - key: GOOGLE_SHEET_ID
-        sync: false               # Set manually in Render dashboard
+        sync: false
 
       - key: GOOGLE_TYPE
         value: service_account
@@ -37,7 +38,7 @@ services:
         sync: false
 
       - key: GOOGLE_PRIVATE_KEY
-        sync: false               # Paste the full key in Render dashboard
+        sync: false
 
       - key: GOOGLE_CLIENT_EMAIL
         sync: false
@@ -57,7 +58,10 @@ services:
       - key: ADMIN_WHATSAPP_NUMBER
         sync: false
 
+      # Chrome profile path — set to persistent disk path when disk is enabled
+      - key: SELENIUM_CHROME_PROFILE_PATH
+        value: /tmp/whatsapp_chrome_profile
+
       # Your Vercel frontend URL — used for CORS whitelisting
-      # Example: https://keymart-global.vercel.app
       - key: FRONTEND_URL
         sync: false

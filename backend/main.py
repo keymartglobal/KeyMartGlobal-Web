@@ -410,6 +410,61 @@ def get_users_for_messaging(organization: str):
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+#  SELENIUM QR / STATUS ENDPOINTS
+# ══════════════════════════════════════════════════════════════════════════════
+
+@app.get("/api/selenium/status", tags=["Selenium"])
+def selenium_status():
+    """
+    Returns whether the Selenium engine is initialised and WhatsApp Web
+    is logged in. Safe to poll every few seconds from the frontend.
+    """
+    from engines.selenium_engine import SeleniumEngine
+    eng = SeleniumEngine._instance
+    if eng is None:
+        return {"initialised": False, "logged_in": False}
+    logged_in = eng.is_wa_logged_in()
+    return {"initialised": True, "logged_in": logged_in}
+
+
+@app.post("/api/selenium/init", tags=["Selenium"])
+def selenium_init():
+    """
+    Initialise (or reuse) the Selenium engine and navigate to WhatsApp Web.
+    Call this to trigger Chrome to open and show the QR code.
+    """
+    try:
+        from engines.selenium_engine import SeleniumEngine
+        eng = SeleniumEngine()          # singleton — safe to call multiple times
+        eng.open_wa_for_qr()
+        logged_in = eng.is_wa_logged_in(timeout=5)
+        return {
+            "success": True,
+            "logged_in": logged_in,
+            "message": "Already logged in" if logged_in else "QR code ready — screenshot available",
+        }
+    except Exception as e:
+        logger.error(f"Selenium init error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/selenium/screenshot", tags=["Selenium"])
+def selenium_screenshot():
+    """
+    Returns a base64-encoded PNG of the current browser screen.
+    Use this to display the WhatsApp QR code to the admin.
+    """
+    from engines.selenium_engine import SeleniumEngine
+    eng = SeleniumEngine._instance
+    if eng is None:
+        raise HTTPException(status_code=404, detail="Selenium not initialised. Call /api/selenium/init first.")
+    b64 = eng.get_screenshot_base64()
+    if not b64:
+        raise HTTPException(status_code=500, detail="Screenshot failed.")
+    return {"success": True, "screenshot": b64}
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 #  DASHBOARD & TEST ENDPOINTS
 # ══════════════════════════════════════════════════════════════════════════════
 
