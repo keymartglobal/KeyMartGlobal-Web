@@ -143,6 +143,12 @@ export default function Status() {
                     <li>Re-open and login using your registered email ID</li>
                     <li>Select <strong>{result.Organization}</strong> when prompted</li>
                   </ul>
+                </div>
+
+                <div className="sp-video-card">
+                  <div className="sp-video-header">
+                    🎬 How do I login to the New Organisation?
+                  </div>
                   <div className="sp-guide-video-wrapper">
                     <iframe
                       src="https://drive.google.com/file/d/1KpWpmoakz_UnCH9xkl6wZ0rw1efIXv0c/preview"
@@ -167,6 +173,12 @@ export default function Status() {
                     <li>Go to <strong>Profile → Account / Organizations</strong></li>
                     <li>Select the old organization → Click <strong>Leave</strong></li>
                   </ul>
+                </div>
+
+                <div className="sp-video-card">
+                  <div className="sp-video-header">
+                    🎬 How do I delete an invalid organization?
+                  </div>
                   <div className="sp-guide-video-wrapper">
                     <iframe
                       src="https://drive.google.com/file/d/1qy6mdR0O5B_mNkdQ9T1Zf_HZsiZ1ThSU/preview"
@@ -622,10 +634,9 @@ export default function Status() {
           position: relative;
           width: 100%;
           padding-top: 56.25%; /* 16:9 Aspect Ratio */
-          border-radius: 8px;
+          border-radius: 0 0 12px 12px;
           overflow: hidden;
           background: #000;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
         .sp-guide-video-wrapper iframe {
           position: absolute;
@@ -634,6 +645,25 @@ export default function Status() {
           width: 100%;
           height: 100%;
           border: none;
+        }
+        .sp-video-card {
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+          overflow: hidden;
+          margin-bottom: 0.5rem;
+        }
+        .sp-video-header {
+          padding: 0.85rem 1rem;
+          font-size: 0.85rem;
+          font-weight: 700;
+          color: #334155;
+          background: #f8fafc;
+          border-bottom: 1px solid #e2e8f0;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
         }
         .sp-guide-notes {
           background: #fff8ed; border: 1.5px solid #fed7aa;
