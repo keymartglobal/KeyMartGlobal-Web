@@ -84,14 +84,19 @@ class SeleniumEngine(WhatsAppEngine):
     # ── Driver Initialisation ─────────────────────────────────────────────────
 
     def _init_driver(self):
+        """
+        Initialise ChromeDriver.
+        - On Render / Linux headless: uses system Chromium (installed by build.sh)
+          with hardcoded binary + driver paths — NO WebDriverManager.
+        - On local Windows/Mac desktop: uses WebDriverManager, shows browser window.
+        """
         try:
             import platform
             from selenium import webdriver
             from selenium.webdriver.chrome.service import Service
             from selenium.webdriver.chrome.options import Options
-            from webdriver_manager.chrome import ChromeDriverManager
 
-            is_server = platform.system() == "Linux" and not os.getenv("DISPLAY", "")
+            is_server = (platform.system() == "Linux" and not os.getenv("DISPLAY", ""))
 
             profile_path = os.getenv(
                 "SELENIUM_CHROME_PROFILE_PATH",
@@ -100,53 +105,87 @@ class SeleniumEngine(WhatsAppEngine):
             os.makedirs(profile_path, exist_ok=True)
 
             options = Options()
-
-            # ── Server (Render / Linux headless) specific flags ───────────────
-            if is_server:
-                options.add_argument("--headless=new")
-                options.add_argument("--no-sandbox")
-                options.add_argument("--disable-dev-shm-usage")
-                options.add_argument("--disable-setuid-sandbox")
-                options.add_argument("--remote-debugging-port=9222")
-                options.add_argument("--disable-extensions")
-                options.add_argument("--disable-background-networking")
-                options.add_argument("--disable-default-apps")
-                options.add_argument("--disable-sync")
-                options.add_argument("--no-first-run")
-                # Try known Linux Chrome binary paths
-                for chrome_bin in [
-                    "/usr/bin/google-chrome-stable",
-                    "/usr/bin/google-chrome",
-                    "/usr/bin/chromium-browser",
-                    "/usr/bin/chromium",
-                    os.getenv("CHROME_BIN", ""),
-                ]:
-                    if chrome_bin and os.path.exists(chrome_bin):
-                        options.binary_location = chrome_bin
-                        logger.info(f"Using Chrome binary: {chrome_bin}")
-                        break
-            else:
-                # Local desktop — persistent profile + visible browser
-                options.add_argument(f"--user-data-dir={profile_path}")
-                options.add_argument("--profile-directory=Default")
-
             options.add_argument("--no-sandbox")
             options.add_argument("--disable-dev-shm-usage")
             options.add_argument("--disable-gpu")
             options.add_argument("--window-size=1366,768")
             options.add_argument("--disable-blink-features=AutomationControlled")
-            options.add_experimental_option("excludeSwitches", ["enable-automation"])
-            options.add_experimental_option("useAutomationExtension", False)
 
-            service = Service(ChromeDriverManager().install())
+            if is_server:
+                # ── Render / headless Linux ──────────────────────────────────
+                # Use system-installed Chromium (build.sh does: apt-get install chromium chromium-driver)
+                options.add_argument("--headless=new")
+                options.add_argument("--disable-setuid-sandbox")
+                options.add_argument("--disable-extensions")
+                options.add_argument("--no-first-run")
+                options.add_argument("--disable-default-apps")
+                options.add_argument("--disable-sync")
+                options.add_argument("--remote-debugging-port=9222")
+
+                # Locate Chromium binary (prioritise env var, then known paths)
+                chrome_bin = os.getenv("CHROME_BIN", "")
+                if not chrome_bin:
+                    for candidate in [
+                        "/usr/bin/chromium",
+                        "/usr/bin/chromium-browser",
+                        "/usr/bin/google-chrome",        # our symlink
+                        "/usr/bin/google-chrome-stable",
+                    ]:
+                        if os.path.exists(candidate):
+                            chrome_bin = candidate
+                            break
+
+                if not chrome_bin:
+                    raise RuntimeError(
+                        "Chromium not found. "
+                        "Ensure build.sh ran: apt-get install -y chromium chromium-driver"
+                    )
+
+                options.binary_location = chrome_bin
+                logger.info(f"Using Chromium binary: {chrome_bin}")
+
+                # Locate system chromedriver (NO WebDriverManager on server)
+                driver_bin = os.getenv("CHROMEDRIVER_BIN", "")
+                if not driver_bin:
+                    for candidate in [
+                        "/usr/bin/chromedriver",
+                        "/usr/lib/chromium/chromedriver",
+                        "/usr/lib/chromium-browser/chromedriver",
+                    ]:
+                        if os.path.exists(candidate):
+                            driver_bin = candidate
+                            break
+
+                if not driver_bin:
+                    raise RuntimeError(
+                        "chromedriver not found. "
+                        "Ensure build.sh ran: apt-get install -y chromium-driver"
+                    )
+
+                logger.info(f"Using chromedriver: {driver_bin}")
+                service = Service(driver_bin)
+
+            else:
+                # ── Local desktop (Windows / Mac) ────────────────────────────
+                # Persistent profile keeps WhatsApp Web session between runs.
+                options.add_argument(f"--user-data-dir={profile_path}")
+                options.add_argument("--profile-directory=Default")
+                options.add_experimental_option("excludeSwitches", ["enable-automation"])
+                options.add_experimental_option("useAutomationExtension", False)
+
+                from webdriver_manager.chrome import ChromeDriverManager
+                service = Service(ChromeDriverManager().install())
+
             self._driver = webdriver.Chrome(service=service, options=options)
             self._driver.execute_script(
                 "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
             )
             mode = "HEADLESS SERVER" if is_server else "DESKTOP"
             logger.info(f"ChromeDriver initialised [{mode}].")
+
         except Exception as e:
             raise RuntimeError(f"Failed to initialise ChromeDriver: {e}")
+
 
     # ── Helpers ───────────────────────────────────────────────────────────────
 
