@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search as SearchIcon, Building2, ShieldAlert, CheckCircle2, XCircle, Sparkles, Mail, Package, PlayCircle, AlertTriangle, Info } from 'lucide-react';
+import { Search as SearchIcon, Building2, ShieldAlert, CheckCircle2, XCircle, Sparkles, Mail, Package, AlertTriangle, Info } from 'lucide-react';
 import { checkStatus } from '../services/api';
 
 export default function Status() {
