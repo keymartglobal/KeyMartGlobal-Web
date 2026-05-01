@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search as SearchIcon, Building2, ShieldAlert, CheckCircle2, XCircle, Sparkles, Mail, Package } from 'lucide-react';
+import { Search as SearchIcon, Building2, ShieldAlert, CheckCircle2, XCircle, Sparkles, Mail, Package, PlayCircle, AlertTriangle, Info } from 'lucide-react';
 import { checkStatus } from '../services/api';
 
 export default function Status() {
@@ -17,12 +17,18 @@ export default function Status() {
     try {
       const res = await checkStatus(email);
       if (res.data && res.data.adobe_data) {
-        setResult(res.data.adobe_data);
+        const data = res.data.adobe_data;
+        if (!data.Organization) {
+          // Found but no org — contact support
+          setError('Your account is registered but no organization has been assigned yet. Please contact support at business@keymartglobal.in');
+        } else {
+          setResult(data);
+        }
       } else {
-        setError('License details not found. Please contact support at business@keymartglobal.in');
+        setError('Email not found in our system. Please contact support at business@keymartglobal.in');
       }
     } catch {
-      setError('License details not found. Please contact support at business@keymartglobal.in');
+      setError('Email not found in our system. Please contact support at business@keymartglobal.in');
     } finally {
       setLoading(false);
     }
@@ -97,51 +103,91 @@ export default function Status() {
 
               {/* Status Banner */}
               <div className={`sp-status-banner ${isActive ? 'sp-active' : 'sp-inactive'}`}>
-                {isActive
-                  ? <CheckCircle2 size={20} />
-                  : <XCircle size={20} />
-                }
-                <span className="sp-status-label">
-                  {isActive ? 'License Active' : 'License Inactive'}
-                </span>
-                <span className="sp-status-pill">
-                  {result.Status?.toUpperCase() || 'UNKNOWN'}
-                </span>
+                {isActive ? <CheckCircle2 size={20} /> : <XCircle size={20} />}
+                <span className="sp-status-label">{isActive ? 'License Active' : 'License Inactive'}</span>
+                <span className="sp-status-pill">{result.Status?.toUpperCase() || 'UNKNOWN'}</span>
               </div>
 
-              {/* Details Grid */}
+              {/* Details */}
               <div className="sp-details">
-
-                {/* Org */}
-                <div className="sp-detail-row sp-detail-org">
-                  <div className="sp-detail-icon-wrap">
-                    <Building2 size={20} />
-                  </div>
+                <div className="sp-detail-row">
+                  <div className="sp-detail-icon-wrap"><Building2 size={20} /></div>
                   <div className="sp-detail-content">
                     <span className="sp-detail-label">Organization</span>
-                    <span className="sp-detail-value sp-org-name">{result.Organization || 'N/A'}</span>
+                    <span className="sp-detail-value sp-org-name">{result.Organization}</span>
                   </div>
                 </div>
-
                 <div className="sp-detail-divider" />
-
-                {/* Plan */}
                 <div className="sp-detail-row">
-                  <div className="sp-detail-icon-wrap sp-detail-icon-blue">
-                    <Package size={20} />
-                  </div>
+                  <div className="sp-detail-icon-wrap sp-detail-icon-blue"><Package size={20} /></div>
                   <div className="sp-detail-content">
                     <span className="sp-detail-label">Active Plan</span>
                     <span className="sp-detail-value">{result.Products || 'N/A'}</span>
                   </div>
                 </div>
-
               </div>
 
-              {/* Footer note */}
+              {/* ── Adobe CC Guide ── */}
+              <div className="sp-guide">
+                <div className="sp-guide-title"><Info size={15} /> Adobe Creative Cloud – Setup Guide</div>
+
+                {/* Step 1 */}
+                <div className="sp-guide-card">
+                  <div className="sp-guide-card-head">
+                    <span className="sp-guide-num">1</span>
+                    <span>How to login to the New Organisation</span>
+                  </div>
+                  <ul className="sp-guide-steps">
+                    <li>Open <strong>Adobe Creative Cloud</strong> → Click <strong>Profile</strong> → <strong>Sign Out</strong></li>
+                    <li>Close all Adobe apps completely</li>
+                    <li>Re-open and login using your registered email ID</li>
+                    <li>Select <strong>{result.Organization}</strong> when prompted</li>
+                  </ul>
+                  <a
+                    href="https://drive.google.com/file/d/1KpWpmoakz_UnCH9xkl6wZ0rw1efIXv0c/view?usp=sharing"
+                    target="_blank" rel="noreferrer"
+                    className="sp-guide-video"
+                  >
+                    <PlayCircle size={15} /> Watch Video Guide
+                  </a>
+                </div>
+
+                {/* Step 2 */}
+                <div className="sp-guide-card">
+                  <div className="sp-guide-card-head">
+                    <span className="sp-guide-num sp-guide-num-warn">2</span>
+                    <span>How to remove the old Organisation</span>
+                  </div>
+                  <div className="sp-guide-warn"><AlertTriangle size={13} /> Only do this after confirming new organisation access.</div>
+                  <ul className="sp-guide-steps">
+                    <li>Open <strong>Adobe Creative Cloud</strong></li>
+                    <li>Go to <strong>Profile → Account / Organizations</strong></li>
+                    <li>Select the old organization → Click <strong>Leave</strong></li>
+                  </ul>
+                  <a
+                    href="https://drive.google.com/file/d/1qy6mdR0O5B_mNkdQ9T1Zf_HZsiZ1ThSU/view?usp=sharing"
+                    target="_blank" rel="noreferrer"
+                    className="sp-guide-video"
+                  >
+                    <PlayCircle size={15} /> Watch Video Guide
+                  </a>
+                </div>
+
+                {/* Notes */}
+                <div className="sp-guide-notes">
+                  <strong>⚠️ Important Notes</strong>
+                  <ul>
+                    <li>Always select the correct organization during login</li>
+                    <li>Use the same registered email ID</li>
+                    <li>Do <strong>not</strong> remove old organization before confirming new access</li>
+                  </ul>
+                </div>
+              </div>
+
               <p className="sp-result-note">
-                For any queries contact{' '}
+                Need help? Contact{' '}
                 <a href="mailto:business@keymartglobal.in">business@keymartglobal.in</a>
+                <br />— KeyMart Global Support Team
               </p>
             </div>
           )}
@@ -527,6 +573,64 @@ export default function Status() {
         }
 
         /* ── Responsive ── */
+        /* ── Adobe Guide ── */
+        .sp-guide {
+          margin-top: 1.5rem;
+          display: flex; flex-direction: column; gap: 1rem;
+        }
+        .sp-guide-title {
+          display: flex; align-items: center; gap: 0.5rem;
+          font-size: 0.78rem; font-weight: 800; text-transform: uppercase;
+          letter-spacing: 0.08em; color: #00897b; margin-bottom: 0.25rem;
+        }
+        .sp-guide-card {
+          background: #f8fafc; border: 1.5px solid #e2e8f0;
+          border-radius: 16px; padding: 1.1rem 1.25rem;
+        }
+        .sp-guide-card-head {
+          display: flex; align-items: center; gap: 0.75rem;
+          font-size: 0.9rem; font-weight: 700; color: #0f172a; margin-bottom: 0.75rem;
+        }
+        .sp-guide-num {
+          width: 26px; height: 26px; border-radius: 8px; flex-shrink: 0;
+          background: linear-gradient(135deg,#00A19B,#2348b0);
+          color: #fff; font-size: 0.78rem; font-weight: 800;
+          display: flex; align-items: center; justify-content: center;
+        }
+        .sp-guide-num-warn {
+          background: linear-gradient(135deg,#f59e0b,#ef4444);
+        }
+        .sp-guide-steps {
+          margin: 0 0 0.875rem 0; padding-left: 1.25rem;
+          display: flex; flex-direction: column; gap: 0.4rem;
+        }
+        .sp-guide-steps li { font-size: 0.85rem; color: #334155; line-height: 1.6; }
+        .sp-guide-steps strong { color: #0f172a; }
+        .sp-guide-warn {
+          display: flex; align-items: center; gap: 0.4rem;
+          font-size: 0.78rem; color: #92400e; background: #fffbeb;
+          border: 1px solid #fde68a; border-radius: 8px;
+          padding: 0.4rem 0.75rem; margin-bottom: 0.75rem;
+        }
+        .sp-guide-video {
+          display: inline-flex; align-items: center; gap: 0.4rem;
+          font-size: 0.8rem; font-weight: 700; color: #2348b0;
+          text-decoration: none; background: rgba(35,72,176,0.08);
+          border: 1px solid rgba(35,72,176,0.2); border-radius: 8px;
+          padding: 0.35rem 0.875rem; transition: all 0.2s;
+        }
+        .sp-guide-video:hover { background: rgba(35,72,176,0.15); }
+        .sp-guide-notes {
+          background: #fff8ed; border: 1.5px solid #fed7aa;
+          border-radius: 14px; padding: 1rem 1.25rem;
+          font-size: 0.83rem; color: #7c3b00;
+        }
+        .sp-guide-notes ul {
+          margin: 0.5rem 0 0 0; padding-left: 1.25rem;
+          display: flex; flex-direction: column; gap: 0.3rem;
+        }
+        .sp-guide-notes strong { color: #92400e; }
+
         @media (max-width: 600px) {
           .sp-card { padding: 0 1.25rem 1.5rem; }
           .sp-trust { flex-wrap: wrap; justify-content: center; }
