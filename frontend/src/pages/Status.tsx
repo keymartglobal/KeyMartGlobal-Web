@@ -143,13 +143,16 @@ export default function Status() {
                     <li>Re-open and login using your registered email ID</li>
                     <li>Select <strong>{result.Organization}</strong> when prompted</li>
                   </ul>
-                  <a
-                    href="https://drive.google.com/file/d/1KpWpmoakz_UnCH9xkl6wZ0rw1efIXv0c/view?usp=sharing"
-                    target="_blank" rel="noreferrer"
-                    className="sp-guide-video"
-                  >
-                    <PlayCircle size={15} /> Watch Video Guide
-                  </a>
+                  <div className="sp-guide-video-wrapper">
+                    <iframe
+                      src="https://drive.google.com/file/d/1KpWpmoakz_UnCH9xkl6wZ0rw1efIXv0c/preview"
+                      width="100%"
+                      height="100%"
+                      allow="autoplay"
+                      allowFullScreen
+                      title="Video Guide - Login to New Organisation"
+                    ></iframe>
+                  </div>
                 </div>
 
                 {/* Step 2 */}
@@ -164,13 +167,16 @@ export default function Status() {
                     <li>Go to <strong>Profile → Account / Organizations</strong></li>
                     <li>Select the old organization → Click <strong>Leave</strong></li>
                   </ul>
-                  <a
-                    href="https://drive.google.com/file/d/1qy6mdR0O5B_mNkdQ9T1Zf_HZsiZ1ThSU/view?usp=sharing"
-                    target="_blank" rel="noreferrer"
-                    className="sp-guide-video"
-                  >
-                    <PlayCircle size={15} /> Watch Video Guide
-                  </a>
+                  <div className="sp-guide-video-wrapper">
+                    <iframe
+                      src="https://drive.google.com/file/d/1qy6mdR0O5B_mNkdQ9T1Zf_HZsiZ1ThSU/preview"
+                      width="100%"
+                      height="100%"
+                      allow="autoplay"
+                      allowFullScreen
+                      title="Video Guide - Remove Old Organisation"
+                    ></iframe>
+                  </div>
                 </div>
 
                 {/* Notes */}
@@ -612,14 +618,23 @@ export default function Status() {
           border: 1px solid #fde68a; border-radius: 8px;
           padding: 0.4rem 0.75rem; margin-bottom: 0.75rem;
         }
-        .sp-guide-video {
-          display: inline-flex; align-items: center; gap: 0.4rem;
-          font-size: 0.8rem; font-weight: 700; color: #2348b0;
-          text-decoration: none; background: rgba(35,72,176,0.08);
-          border: 1px solid rgba(35,72,176,0.2); border-radius: 8px;
-          padding: 0.35rem 0.875rem; transition: all 0.2s;
+        .sp-guide-video-wrapper {
+          position: relative;
+          width: 100%;
+          padding-top: 56.25%; /* 16:9 Aspect Ratio */
+          border-radius: 8px;
+          overflow: hidden;
+          background: #000;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-        .sp-guide-video:hover { background: rgba(35,72,176,0.15); }
+        .sp-guide-video-wrapper iframe {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          border: none;
+        }
         .sp-guide-notes {
           background: #fff8ed; border: 1.5px solid #fed7aa;
           border-radius: 14px; padding: 1rem 1.25rem;
