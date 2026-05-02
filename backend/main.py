@@ -7,7 +7,7 @@ Entry point for the backend. Registers all routes, middleware, and starts the sc
 import os
 import logging
 import threading
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form, BackgroundTasks
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, BackgroundTasks, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
@@ -94,8 +94,13 @@ class TestMessageRequest(BaseModel):
 async def on_startup():
     """Initialize services and start background scheduler on app boot."""
     logger.info("KeyMart Global backend starting up...")
-    start_scheduler(sheets, engine)
-    logger.info("Scheduler started. System is live.")
+    try:
+        start_scheduler(sheets, engine)
+        logger.info("Scheduler started. System is live.")
+    except Exception as e:
+        # Log but DO NOT re-raise — a scheduler failure must not crash the app.
+        # The /health endpoint will still return 200 so Render doesn't restart.
+        logger.error(f"Scheduler startup failed (non-fatal): {e}")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -502,18 +507,21 @@ async def test_whatsapp(req: TestMessageRequest):
 
 @app.get("/api/health", tags=["Health"])
 @app.get("/health", tags=["Health"])          # bare path for UptimeRobot / Better Uptime
-def health_check():
+def health_check(response: Response):
     """
-    Lightweight health check — no DB, no external calls.
-    Returns HTTP 200 instantly. Used by Render's zero-sleep ping and
-    external uptime monitors to prevent the free-tier service going idle.
+    Lightweight health check — zero DB calls, zero external requests.
+    Always returns HTTP 200. Cache-Control header prevents stale responses
+    being served to UptimeRobot, which can cause false DOWN alerts.
     """
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+    response.headers["X-Content-Type-Options"] = "nosniff"
     return {"status": "ok", "service": "KeyMart Global API", "version": "2.0.0"}
 
 
 @app.get("/", tags=["Health"])
-def root():
+def root(response: Response):
     """Root endpoint — confirms the API is reachable."""
+    response.headers["Cache-Control"] = "no-store"
     return {"message": "KeyMart Global API is running. Visit /docs for the API reference."}
 
 
