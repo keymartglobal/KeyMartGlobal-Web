@@ -500,10 +500,21 @@ async def test_whatsapp(req: TestMessageRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/health", tags=["Test"])
+@app.get("/api/health", tags=["Health"])
+@app.get("/health", tags=["Health"])          # bare path for UptimeRobot / Better Uptime
 def health_check():
-    """Health check endpoint."""
-    return {"status": "healthy", "service": "KeyMart Global API", "version": "2.0.0"}
+    """
+    Lightweight health check — no DB, no external calls.
+    Returns HTTP 200 instantly. Used by Render's zero-sleep ping and
+    external uptime monitors to prevent the free-tier service going idle.
+    """
+    return {"status": "ok", "service": "KeyMart Global API", "version": "2.0.0"}
+
+
+@app.get("/", tags=["Health"])
+def root():
+    """Root endpoint — confirms the API is reachable."""
+    return {"message": "KeyMart Global API is running. Visit /docs for the API reference."}
 
 
 # ══════════════════════════════════════════════════════════════════════════════
