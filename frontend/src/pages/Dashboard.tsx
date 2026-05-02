@@ -29,7 +29,7 @@ export default function Dashboard() {
         healthCheck(),
       ]);
       setStats(statsRes.data.stats);
-      setBackendOnline(healthRes.data.status === 'healthy');
+      setBackendOnline(!!healthRes.data.status); // truthy for both "ok" and "healthy"
     } catch {
       setBackendOnline(false);
     } finally {
