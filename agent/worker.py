@@ -441,6 +441,10 @@ def poll_tasks() -> list:
         if resp.status_code == 200:
             data = resp.json()
             return data.get("tasks", [])
+        elif resp.status_code in (401, 403):
+            logger.warning(f"Poll error: {resp.status_code}. Token rejected (backend might have restarted). Re-registering...")
+            register_with_backend()
+            return []
         else:
             logger.warning(f"Poll error: {resp.status_code}")
             return []
@@ -455,12 +459,15 @@ def poll_tasks() -> list:
 def report_result(task_id: str, status: str, error: str = ""):
     """Report task result back to the backend."""
     try:
-        requests.post(
+        resp = requests.post(
             f"{BACKEND_URL}/api/agent/report",
             json={"task_id": task_id, "status": status, "error": error},
             headers={"Authorization": f"Bearer {AGENT_TOKEN}"},
             timeout=10,
         )
+        if resp.status_code in (401, 403):
+            logger.warning(f"Report error: {resp.status_code}. Re-registering...")
+            register_with_backend()
     except Exception as e:
         logger.warning(f"Report failed for {task_id}: {e}")
 
@@ -468,11 +475,14 @@ def report_result(task_id: str, status: str, error: str = ""):
 def send_heartbeat():
     """Send heartbeat to backend."""
     try:
-        requests.post(
+        resp = requests.post(
             f"{BACKEND_URL}/api/agent/heartbeat/{CLIENT_ID}",
             headers={"Authorization": f"Bearer {AGENT_TOKEN}"},
             timeout=5,
         )
+        if resp.status_code in (401, 403):
+            logger.warning(f"Heartbeat error: {resp.status_code}. Re-registering...")
+            register_with_backend()
     except Exception:
         pass
 
