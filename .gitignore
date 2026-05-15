@@ -7,6 +7,9 @@ backend/.env
 backend/credentials.json
 backend/*.json
 frontend/.env
+agent/config.json
+agent/chrome-profile/
+agent/screenshots/
 
 # ── Python ──────────────────────────────────────────────────
 __pycache__/

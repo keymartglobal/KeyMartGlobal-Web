@@ -9,12 +9,12 @@
 import { useState, useEffect } from 'react';
 import {
   Settings, Save, Server, Globe, FileUp, MessageSquare,
-  CheckCircle2, AlertTriangle, RefreshCw, Info
+  CheckCircle2, AlertTriangle, RefreshCw, Info, Container, Wifi, WifiOff
 } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { getAutomationSettings, saveAutomationSettings } from '../services/api';
+import { getAutomationSettings, saveAutomationSettings, getAgentStatus } from '../services/api';
 
-type Engine = 'META_API' | 'SELENIUM';
+type Engine = 'META_API' | 'SELENIUM' | 'DOCKER_AGENT';
 type Mode   = 'FILE_TRIGGER' | 'MANUAL';
 
 interface SettingsState {
@@ -61,10 +61,25 @@ export default function AdminSettings() {
   const [loading, setLoading]   = useState(true);
   const [saving, setSaving]     = useState(false);
   const [saved, setSaved]       = useState(false);
+  const [agents, setAgents]     = useState<any[]>([]);
+  const [queueStats, setQueueStats] = useState<any>({});
 
   useEffect(() => {
     fetchSettings();
+    fetchAgents();
+    const interval = setInterval(fetchAgents, 10000);
+    return () => clearInterval(interval);
   }, []);
+
+  const fetchAgents = async () => {
+    try {
+      const res = await getAgentStatus();
+      setAgents(res.data.agents || []);
+      setQueueStats(res.data.queue || {});
+    } catch {
+      // Silently fail — agents panel is informational
+    }
+  };
 
   const fetchSettings = async () => {
     setLoading(true);
@@ -161,6 +176,20 @@ export default function AdminSettings() {
                   <div className="as-option-desc">Official API · Requires credentials</div>
                 </div>
                 <div className="as-soon-badge">Soon</div>
+              </button>
+
+              <button
+                className={`as-option ${settings.active_engine === 'DOCKER_AGENT' ? 'as-option-active' : ''}`}
+                onClick={() => set('active_engine', 'DOCKER_AGENT')}
+              >
+                <div className="as-option-icon as-icon-green"><Container size={18} /></div>
+                <div>
+                  <div className="as-option-name">Docker Agent</div>
+                  <div className="as-option-desc">Hybrid · Selenium runs on your PC via Docker</div>
+                </div>
+                {settings.active_engine === 'DOCKER_AGENT' && (
+                  <CheckCircle2 size={18} className="as-check" />
+                )}
               </button>
             </div>
           </div>
@@ -279,6 +308,64 @@ export default function AdminSettings() {
         </div>
       </div>
 
+      {/* ── Docker Agent Status Panel ──────────────────────────── */}
+      {settings.active_engine === 'DOCKER_AGENT' && (
+        <div className="as-card" style={{marginBottom:'1.5rem'}}>
+          <div className="as-card-title">
+            <Container size={16} /> Docker Agents
+          </div>
+          <p className="as-card-desc">
+            Connected Docker Agents that execute WhatsApp messages on your local machines.
+          </p>
+
+          {agents.length === 0 ? (
+            <div className="as-agent-empty">
+              <WifiOff size={20} />
+              <span>No agents connected. Start a Docker Agent on your machine.</span>
+            </div>
+          ) : (
+            <div className="as-agent-list">
+              {agents.map((agent: any) => (
+                <div key={agent.client_id} className="as-agent-row">
+                  <div className={`as-agent-dot ${agent.status === 'online' ? 'as-dot-online' : 'as-dot-offline'}`} />
+                  <div className="as-agent-info">
+                    <div className="as-agent-id">{agent.client_id}</div>
+                    <div className="as-agent-meta">
+                      {agent.status === 'online' ? 'Online' : 'Offline'} · 
+                      {agent.messages_sent} sent · {agent.messages_failed} failed
+                    </div>
+                  </div>
+                  {agent.status === 'online'
+                    ? <Wifi size={16} className="as-agent-wifi-on" />
+                    : <WifiOff size={16} className="as-agent-wifi-off" />
+                  }
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Queue Stats */}
+          <div className="as-queue-stats">
+            <div className="as-queue-stat">
+              <span className="as-queue-num">{queueStats.queued || 0}</span>
+              <span className="as-queue-label">Queued</span>
+            </div>
+            <div className="as-queue-stat">
+              <span className="as-queue-num">{queueStats.assigned || 0}</span>
+              <span className="as-queue-label">In Progress</span>
+            </div>
+            <div className="as-queue-stat">
+              <span className="as-queue-num as-num-green">{queueStats.success || 0}</span>
+              <span className="as-queue-label">Delivered</span>
+            </div>
+            <div className="as-queue-stat">
+              <span className="as-queue-num as-num-red">{queueStats.failed || 0}</span>
+              <span className="as-queue-label">Failed</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Save Bar ─────────────────────────────────────────────── */}
       <div className="as-save-bar">
         <div className="as-save-hint">
@@ -337,6 +424,27 @@ export default function AdminSettings() {
         .as-option-desc { font-size:0.75rem; color:#64748b; margin-top:0.1rem; }
         .as-check { color:#00897b; margin-left:auto; flex-shrink:0; }
         .as-soon-badge { margin-left:auto; background:#f1f5f9; color:#94a3b8; font-size:0.68rem; font-weight:700; border-radius:6px; padding:0.2rem 0.5rem; letter-spacing:0.05em; flex-shrink:0; }
+
+        .as-icon-green { background:rgba(16,185,129,0.1); color:#059669; }
+
+        .as-agent-empty { display:flex; align-items:center; gap:0.75rem; padding:1.25rem; background:#fef2f2; border:1px solid #fecaca; border-radius:12px; font-size:0.82rem; color:#991b1b; }
+        .as-agent-list { display:flex; flex-direction:column; gap:0.5rem; }
+        .as-agent-row { display:flex; align-items:center; gap:0.75rem; padding:0.75rem 1rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; }
+        .as-agent-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+        .as-dot-online { background:#10b981; box-shadow:0 0 6px rgba(16,185,129,0.5); }
+        .as-dot-offline { background:#ef4444; }
+        .as-agent-info { flex:1; }
+        .as-agent-id { font-size:0.88rem; font-weight:700; color:#0f172a; }
+        .as-agent-meta { font-size:0.75rem; color:#64748b; margin-top:0.1rem; }
+        .as-agent-wifi-on { color:#10b981; flex-shrink:0; }
+        .as-agent-wifi-off { color:#ef4444; flex-shrink:0; }
+
+        .as-queue-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:0.75rem; margin-top:1rem; }
+        .as-queue-stat { text-align:center; padding:0.75rem; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; }
+        .as-queue-num { display:block; font-size:1.5rem; font-weight:800; color:#0f172a; }
+        .as-num-green { color:#10b981; }
+        .as-num-red { color:#ef4444; }
+        .as-queue-label { font-size:0.7rem; color:#94a3b8; text-transform:uppercase; letter-spacing:0.05em; }
 
         .as-info-box { display:flex; align-items:flex-start; gap:0.625rem; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; padding:1rem 1.125rem; font-size:0.82rem; color:#166534; }
         .as-info-box svg { flex-shrink:0; margin-top:1px; }

@@ -61,7 +61,7 @@ export const getUsersForMessaging = (organization: string) =>
 export const getDashboardStats = () => api.get('/api/dashboard/stats');
 
 // ── Automation Engine Control ─────────────────────────────────────────────────
-export const setAutomationEngine = (mode: 'META_API' | 'SELENIUM') =>
+export const setAutomationEngine = (mode: 'META_API' | 'SELENIUM' | 'DOCKER_AGENT') =>
   api.post('/api/automation/set-engine', { mode });
 export const startAutomation = (template?: string) =>
   api.post('/api/automation/start', { template });
@@ -69,7 +69,7 @@ export const stopAutomation = () => api.post('/api/automation/stop');
 export const getAutomationStatus = () => api.get('/api/automation/status');
 export const getAutomationSettings = () => api.get('/api/automation/settings');
 export const saveAutomationSettings = (data: {
-  active_engine: 'META_API' | 'SELENIUM';
+  active_engine: 'META_API' | 'SELENIUM' | 'DOCKER_AGENT';
   messaging_mode: 'FILE_TRIGGER' | 'MANUAL';
   manual_template?: string;
   file_trigger_template?: string;
@@ -80,5 +80,11 @@ export const getSeleniumStatus = () => api.get('/api/selenium/status');
 export const initSelenium = () => api.post('/api/selenium/init');
 export const getSeleniumScreenshot = () => api.get('/api/selenium/screenshot');
 
+// ── Docker Agent Management ───────────────────────────────────────────────────
+export const getAgentStatus = () => api.get('/api/agent/status');
+export const registerAgent = (client_id: string, agent_token: string) =>
+  api.post('/api/agent/register', { client_id, agent_token });
+
 // ── Test ──────────────────────────────────────────────────────────────────────
 export const healthCheck = () => api.get('/api/health');
+

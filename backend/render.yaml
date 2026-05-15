@@ -1,6 +1,9 @@
 # ============================================================
 # render.yaml — Render deployment config for KeyMart Global
 # Backend (FastAPI) service definition
+#
+# NOTE: Selenium/Chromium is NO LONGER installed on Render.
+# WhatsApp automation runs on client machines via Docker Agent.
 # ============================================================
 
 services:
@@ -11,14 +14,6 @@ services:
     buildCommand: bash build.sh
     startCommand: gunicorn main:app -w 1 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT
     plan: free
-
-    # ── Persistent Disk (Chrome session storage) ──────────────
-    # Mount /data so the WhatsApp session survives restarts.
-    # Upgrade plan to "starter" for persistent disk support.
-    # disk:
-    #   name: whatsapp-profile
-    #   mountPath: /data/whatsapp_chrome_profile
-    #   sizeGB: 1
 
     # ── Environment Variables ─────────────────────────────────
     envVars:
@@ -57,10 +52,6 @@ services:
 
       - key: ADMIN_WHATSAPP_NUMBER
         sync: false
-
-      # Chrome profile path — set to persistent disk path when disk is enabled
-      - key: SELENIUM_CHROME_PROFILE_PATH
-        value: /tmp/whatsapp_chrome_profile
 
       # Your Vercel frontend URL — used for CORS whitelisting
       - key: FRONTEND_URL

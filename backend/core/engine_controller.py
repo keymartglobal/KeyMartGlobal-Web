@@ -1,12 +1,13 @@
 """
 engine_controller.py — Strategy pattern engine selector.
 Only ONE engine can be active at a time.
+Supports: META_API, SELENIUM (local), DOCKER_AGENT (remote).
 """
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Literal
 
-EngineMode = Literal["META_API", "SELENIUM"]
+EngineMode = Literal["META_API", "SELENIUM", "DOCKER_AGENT"]
 
 
 class WhatsAppEngine(ABC):
@@ -34,5 +35,8 @@ def get_engine(mode: EngineMode) -> WhatsAppEngine:
     elif mode == "SELENIUM":
         from engines.selenium_engine import SeleniumEngine
         return SeleniumEngine()
+    elif mode == "DOCKER_AGENT":
+        from engines.agent_engine import AgentEngine
+        return AgentEngine()
     else:
         raise ValueError(f"Unknown engine mode: {mode}")

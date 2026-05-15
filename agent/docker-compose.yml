@@ -1,0 +1,12 @@
+services:
+  whatsapp-agent:
+    build: .
+    container_name: whatsapp-agent
+    restart: unless-stopped
+    volumes:
+      - whatsapp-profile:/app/chrome-profile
+      - ./screenshots:/app/screenshots
+      - ./config.json:/app/config.json:ro
+
+volumes:
+  whatsapp-profile:

@@ -17,6 +17,7 @@ from services.sheets_service import SheetsService
 from services.whatsapp_service import WhatsAppService
 from services.comparison_engine import ComparisonEngine
 from scheduler import start_scheduler
+from core.task_queue import task_queue
 
 # ── Load Environment Variables ──────────────────────────────────────────────
 load_dotenv()
@@ -536,7 +537,7 @@ from utils.template_engine import DEFAULT_TEMPLATE
 
 
 class EngineRequest(BaseModel):
-    mode: Literal["META_API", "SELENIUM"]
+    mode: Literal["META_API", "SELENIUM", "DOCKER_AGENT"]
 
 
 class AutomationRequest(BaseModel):
@@ -544,7 +545,7 @@ class AutomationRequest(BaseModel):
 
 
 class SettingsRequest(BaseModel):
-    active_engine: Literal["META_API", "SELENIUM"]
+    active_engine: Literal["META_API", "SELENIUM", "DOCKER_AGENT"]
     messaging_mode: Literal["FILE_TRIGGER", "MANUAL"]
     manual_template: Optional[str] = None
     file_trigger_template: Optional[str] = None
@@ -621,4 +622,114 @@ def get_automation_status():
         "success": True,
         **automation_config.get_status(),
         "logs": automation_config.logs[-100:],   # last 100 entries
+    }
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  DOCKER AGENT ENDPOINTS (Hybrid Architecture)
+# ══════════════════════════════════════════════════════════════════════════════
+
+class AgentRegisterRequest(BaseModel):
+    """Request body for agent registration."""
+    client_id: str
+    agent_token: str
+
+
+class TaskReportRequest(BaseModel):
+    """Report from a Docker Agent about a completed task."""
+    task_id: str
+    status: Literal["success", "failed"]
+    error: str = ""
+
+
+@app.post("/api/agent/register", tags=["Docker Agent"])
+def register_agent(req: AgentRegisterRequest):
+    """
+    Register a Docker Agent with the backend.
+    The agent must provide a unique client_id and a secure agent_token.
+    """
+    agent = task_queue.register_agent(req.client_id, req.agent_token)
+    logger.info(f"Agent registered: {req.client_id}")
+    return {
+        "success": True,
+        "message": f"Agent '{req.client_id}' registered.",
+        "client_id": agent.client_id,
+    }
+
+
+@app.get("/api/agent/tasks/{client_id}", tags=["Docker Agent"])
+def get_agent_tasks(client_id: str, authorization: str = Header(None)):
+    """
+    Docker Agent polls this endpoint to receive pending tasks.
+    Requires Bearer token authentication.
+    Returns up to 5 tasks per poll.
+    """
+    # Verify agent token
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing agent token.")
+    token = authorization.replace("Bearer ", "")
+    verified_id = task_queue.verify_agent_token(token)
+    if not verified_id or verified_id != client_id:
+        raise HTTPException(status_code=403, detail="Invalid agent token.")
+
+    # Update heartbeat
+    task_queue.heartbeat(client_id)
+
+    # Fetch pending tasks
+    tasks = task_queue.get_pending_tasks(client_id, limit=5)
+    return {"success": True, "tasks": tasks, "count": len(tasks)}
+
+
+@app.post("/api/agent/report", tags=["Docker Agent"])
+def report_task_result(req: TaskReportRequest, authorization: str = Header(None)):
+    """
+    Docker Agent reports the result of a completed task.
+    """
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing agent token.")
+    token = authorization.replace("Bearer ", "")
+    verified_id = task_queue.verify_agent_token(token)
+    if not verified_id:
+        raise HTTPException(status_code=403, detail="Invalid agent token.")
+
+    # Log to automation config as well
+    if req.status == "success":
+        automation_config.log("", "", "DOCKER_AGENT", "success")
+    else:
+        automation_config.log("", "", "DOCKER_AGENT", "failed", req.error)
+
+    success = task_queue.report_task(req.task_id, req.status, req.error)
+    if not success:
+        raise HTTPException(status_code=404, detail="Task not found.")
+    return {"success": True, "message": f"Task {req.task_id} reported as {req.status}."}
+
+
+@app.post("/api/agent/heartbeat/{client_id}", tags=["Docker Agent"])
+def agent_heartbeat(client_id: str, authorization: str = Header(None)):
+    """
+    Docker Agent sends periodic heartbeats to confirm it's alive.
+    """
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing agent token.")
+    token = authorization.replace("Bearer ", "")
+    verified_id = task_queue.verify_agent_token(token)
+    if not verified_id or verified_id != client_id:
+        raise HTTPException(status_code=403, detail="Invalid agent token.")
+
+    task_queue.heartbeat(client_id)
+    return {"success": True, "message": "Heartbeat received."}
+
+
+@app.get("/api/agent/status", tags=["Docker Agent"])
+def get_all_agents():
+    """
+    Returns the status of all registered Docker Agents.
+    For the admin dashboard.
+    """
+    agents = task_queue.get_all_agents()
+    queue_stats = task_queue.get_queue_stats()
+    return {
+        "success": True,
+        "agents": agents,
+        "queue": queue_stats,
     }

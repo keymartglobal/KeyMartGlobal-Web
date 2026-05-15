@@ -7,7 +7,7 @@ import threading
 from dataclasses import dataclass, field
 from typing import Literal, List, Dict, Any, Optional
 
-EngineMode    = Literal["META_API", "SELENIUM"]
+EngineMode    = Literal["META_API", "SELENIUM", "DOCKER_AGENT"]
 MessagingMode = Literal["FILE_TRIGGER", "MANUAL"]
 
 
