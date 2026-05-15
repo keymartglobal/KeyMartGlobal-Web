@@ -7,7 +7,7 @@ Entry point for the backend. Registers all routes, middleware, and starts the sc
 import os
 import logging
 import threading
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form, BackgroundTasks, Response
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, BackgroundTasks, Response, Header
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
