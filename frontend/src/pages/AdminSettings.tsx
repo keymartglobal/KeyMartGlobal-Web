@@ -9,12 +9,12 @@
 import { useState, useEffect } from 'react';
 import {
   Settings, Save, Server, Globe, FileUp, MessageSquare,
-  CheckCircle2, AlertTriangle, RefreshCw, Info, Container, Wifi, WifiOff
+  CheckCircle2, AlertTriangle, RefreshCw, Info, Wifi, WifiOff
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { getAutomationSettings, saveAutomationSettings, getAgentStatus } from '../services/api';
 
-type Engine = 'META_API' | 'SELENIUM' | 'DOCKER_AGENT';
+type Engine = 'META_API' | 'SELENIUM';
 type Mode   = 'FILE_TRIGGER' | 'MANUAL';
 
 interface SettingsState {
@@ -53,7 +53,7 @@ KeyMart Global Team`;
 
 export default function AdminSettings() {
   const [settings, setSettings] = useState<SettingsState>({
-    active_engine: 'SELENIUM',
+    active_engine: 'SELENIUM' as Engine,
     messaging_mode: 'MANUAL',
     manual_template: DEFAULT_MANUAL,
     file_trigger_template: DEFAULT_FILE_TRIGGER,
@@ -86,7 +86,7 @@ export default function AdminSettings() {
     try {
       const res = await getAutomationSettings();
       setSettings({
-        active_engine:        res.data.active_engine        || 'SELENIUM',
+        active_engine:        (res.data.active_engine === 'DOCKER_AGENT' ? 'SELENIUM' : res.data.active_engine) || 'SELENIUM',
         messaging_mode:       res.data.messaging_mode       || 'MANUAL',
         manual_template:      res.data.manual_template      || DEFAULT_MANUAL,
         file_trigger_template:res.data.file_trigger_template|| DEFAULT_FILE_TRIGGER,
@@ -158,8 +158,8 @@ export default function AdminSettings() {
               >
                 <div className="as-option-icon as-icon-purple"><Server size={18} /></div>
                 <div>
-                  <div className="as-option-name">Selenium</div>
-                  <div className="as-option-desc">WhatsApp Web automation · Active ✓</div>
+                  <div className="as-option-name">Selenium (WhatsApp Web)</div>
+                  <div className="as-option-desc">Runs via Docker Agent on your PC · Active ✓</div>
                 </div>
                 {settings.active_engine === 'SELENIUM' && (
                   <CheckCircle2 size={18} className="as-check" />
@@ -176,20 +176,6 @@ export default function AdminSettings() {
                   <div className="as-option-desc">Official API · Requires credentials</div>
                 </div>
                 <div className="as-soon-badge">Soon</div>
-              </button>
-
-              <button
-                className={`as-option ${settings.active_engine === 'DOCKER_AGENT' ? 'as-option-active' : ''}`}
-                onClick={() => set('active_engine', 'DOCKER_AGENT')}
-              >
-                <div className="as-option-icon as-icon-green"><Container size={18} /></div>
-                <div>
-                  <div className="as-option-name">Docker Agent</div>
-                  <div className="as-option-desc">Hybrid · Selenium runs on your PC via Docker</div>
-                </div>
-                {settings.active_engine === 'DOCKER_AGENT' && (
-                  <CheckCircle2 size={18} className="as-check" />
-                )}
               </button>
             </div>
           </div>
@@ -308,11 +294,11 @@ export default function AdminSettings() {
         </div>
       </div>
 
-      {/* ── Docker Agent Status Panel ──────────────────────────── */}
-      {settings.active_engine === 'DOCKER_AGENT' && (
+      {/* ── Agent Status Panel ──────────────────────────────────── */}
+      {settings.active_engine === 'SELENIUM' && (
         <div className="as-card" style={{marginBottom:'1.5rem'}}>
           <div className="as-card-title">
-            <Container size={16} /> Docker Agents
+            <Server size={16} /> Connected Agents
           </div>
           <p className="as-card-desc">
             Connected Docker Agents that execute WhatsApp messages on your local machines.

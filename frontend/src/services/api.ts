@@ -61,7 +61,7 @@ export const getUsersForMessaging = (organization: string) =>
 export const getDashboardStats = () => api.get('/api/dashboard/stats');
 
 // ── Automation Engine Control ─────────────────────────────────────────────────
-export const setAutomationEngine = (mode: 'META_API' | 'SELENIUM' | 'DOCKER_AGENT') =>
+export const setAutomationEngine = (mode: 'META_API' | 'SELENIUM') =>
   api.post('/api/automation/set-engine', { mode });
 export const startAutomation = (template?: string) =>
   api.post('/api/automation/start', { template });
@@ -69,7 +69,7 @@ export const stopAutomation = () => api.post('/api/automation/stop');
 export const getAutomationStatus = () => api.get('/api/automation/status');
 export const getAutomationSettings = () => api.get('/api/automation/settings');
 export const saveAutomationSettings = (data: {
-  active_engine: 'META_API' | 'SELENIUM' | 'DOCKER_AGENT';
+  active_engine: 'META_API' | 'SELENIUM';
   messaging_mode: 'FILE_TRIGGER' | 'MANUAL';
   manual_template?: string;
   file_trigger_template?: string;

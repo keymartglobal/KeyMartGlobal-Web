@@ -1,7 +1,9 @@
 """
 engine_controller.py — Strategy pattern engine selector.
 Only ONE engine can be active at a time.
-Supports: META_API, SELENIUM (local), DOCKER_AGENT (remote).
+Supports: META_API, SELENIUM (runs via local Docker Agent).
+SELENIUM and DOCKER_AGENT are treated as equivalent — both route
+to the AgentEngine which dispatches tasks to the local Docker container.
 """
 from __future__ import annotations
 from abc import ABC, abstractmethod
@@ -27,15 +29,13 @@ class WhatsAppEngine(ABC):
 def get_engine(mode: EngineMode) -> WhatsAppEngine:
     """
     Factory: returns the correct engine instance.
-    Raises ValueError if mode is unknown.
+    SELENIUM and DOCKER_AGENT both route to AgentEngine since
+    Selenium runs locally via the Docker Agent container.
     """
     if mode == "META_API":
         from engines.meta_api_engine import MetaAPIEngine
         return MetaAPIEngine()
-    elif mode == "SELENIUM":
-        from engines.selenium_engine import SeleniumEngine
-        return SeleniumEngine()
-    elif mode == "DOCKER_AGENT":
+    elif mode in ("SELENIUM", "DOCKER_AGENT"):
         from engines.agent_engine import AgentEngine
         return AgentEngine()
     else:
