@@ -10,9 +10,10 @@ Runs on the CLIENT machine inside Docker.
 - Saves error screenshots for debugging
 - Maintains persistent Chrome profile for WhatsApp login
 
-FIRST RUN: Container starts in NON-headless mode so the user
-can scan the WhatsApp QR code. After login, set headless=true
-in config.json and restart the container.
+SMART LOGIN FLOW:
+  • First run   → No Chrome session exists → QR code saved to screenshots/QR_CODE.png
+  • Subsequent  → Session already in Chrome profile → auto-login, no QR needed
+  • If expired  → WhatsApp redirects to QR screen → automatically shows QR again
 """
 
 import os
@@ -22,6 +23,7 @@ import time
 import json
 import random
 import signal
+import shutil
 import logging
 import urllib.parse
 import requests
@@ -33,6 +35,7 @@ from datetime import datetime
 
 CONFIG_PATH = "/app/config.json"
 
+
 def load_config() -> dict:
     """Load configuration from config.json."""
     if not os.path.exists(CONFIG_PATH):
@@ -42,13 +45,13 @@ def load_config() -> dict:
     with open(CONFIG_PATH, "r") as f:
         return json.load(f)
 
+
 config = load_config()
 
 BACKEND_URL    = config.get("backend_url", "http://localhost:8000")
 CLIENT_ID      = config.get("client_id", "client_001")
 AGENT_TOKEN    = config.get("agent_token", "change_me_to_secure_token")
 POLL_INTERVAL  = config.get("poll_interval", 5)
-HEADLESS       = config.get("headless", False)
 MAX_MESSAGES   = config.get("max_messages_per_session", 50)
 CHROME_PROFILE = "/app/chrome-profile"
 SCREENSHOT_DIR = "/app/screenshots"
@@ -62,9 +65,9 @@ logging.basicConfig(
 logger = logging.getLogger("agent")
 
 # ── Globals ──────────────────────────────────────────────────────────────────
-driver = None
+driver    = None
 msg_count = 0
-running = True
+running   = True
 
 # ── XPath Selectors for WhatsApp Web ─────────────────────────────────────────
 SEND_BUTTON_XPATHS = [
@@ -75,13 +78,21 @@ SEND_BUTTON_XPATHS = [
     '//button[contains(@class,"send")]',
 ]
 
-LOADED_XPATHS = [
+# Signs that the user IS logged in to WhatsApp Web
+LOGGED_IN_XPATHS = [
     '//div[@aria-label="Search or start new chat"]',
     '//div[@aria-label="Search input textbox"]',
     '//div[@data-testid="chat-list"]',
     '//button[@aria-label="New chat"]',
-    '//div[@role="textbox"]',
     '//div[@data-tab="3"]',
+]
+
+# Signs that WhatsApp Web is showing the QR / login screen
+QR_SCREEN_XPATHS = [
+    '//canvas[@aria-label="Scan this QR code to link a device"]',
+    '//div[@data-ref]',   # QR code container
+    '//div[contains(@class,"landing-main")]',
+    '//*[@data-testid="qr-code"]',
 ]
 
 
@@ -110,6 +121,28 @@ def save_screenshot(name: str = "error"):
         logger.warning(f"Screenshot failed: {e}")
 
 
+def has_existing_session() -> bool:
+    """
+    Check if a WhatsApp Web session already exists in the Chrome profile.
+    Looks for the WhatsApp localStorage database — this file only exists
+    after a successful login.
+    """
+    session_markers = [
+        # Chrome's IndexedDB or Local Storage for WhatsApp
+        os.path.join(CHROME_PROFILE, "Default", "Local Storage", "leveldb"),
+        os.path.join(CHROME_PROFILE, "Default", "IndexedDB"),
+    ]
+    for marker in session_markers:
+        if os.path.exists(marker):
+            # Marker exists — check if it has actual content (not just empty dirs)
+            if os.path.isdir(marker):
+                if any(os.scandir(marker)):
+                    return True
+            else:
+                return True
+    return False
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 #  SELENIUM BROWSER
 # ══════════════════════════════════════════════════════════════════════════════
@@ -122,6 +155,18 @@ def init_browser():
     from selenium.webdriver.chrome.options import Options
 
     os.makedirs(CHROME_PROFILE, exist_ok=True)
+
+    # Remove lock files if they exist from a previous crash
+    for lock_name in ["SingletonLock", "SingletonSocket", "SingletonCookie"]:
+        lock_file = os.path.join(CHROME_PROFILE, lock_name)
+        if os.path.exists(lock_file):
+            try:
+                if os.path.isdir(lock_file):
+                    shutil.rmtree(lock_file)
+                else:
+                    os.remove(lock_file)
+            except Exception:
+                pass
 
     options = Options()
 
@@ -137,18 +182,11 @@ def init_browser():
     # Anti-detection
     options.add_argument("--disable-blink-features=AutomationControlled")
 
-    if HEADLESS:
-        options.add_argument("--headless=new")
-        logger.info("Starting in HEADLESS mode (background).")
-    else:
-        logger.info("Starting in VISIBLE mode (for QR code scanning).")
-
     # Use system Chromium (installed in Docker image)
     chrome_bin = "/usr/bin/chromium"
     if os.path.exists(chrome_bin):
         options.binary_location = chrome_bin
     else:
-        # Fallback: try other known paths
         for candidate in ["/usr/bin/chromium-browser", "/usr/bin/google-chrome"]:
             if os.path.exists(candidate):
                 options.binary_location = candidate
@@ -164,38 +202,143 @@ def init_browser():
     logger.info("Browser initialized successfully.")
 
 
-def wait_for_wa_login(timeout=180):
-    """Wait for WhatsApp Web to load (QR scan or auto-login)."""
+def _check_login_state(wait_seconds: int = 5) -> str:
+    """
+    Check current WhatsApp Web state.
+    Returns: 'logged_in' | 'qr_screen' | 'loading'
+    """
     from selenium.webdriver.common.by import By
     from selenium.webdriver.support.ui import WebDriverWait
     from selenium.webdriver.support import expected_conditions as EC
 
+    # Check if logged in
+    for xpath in LOGGED_IN_XPATHS:
+        try:
+            WebDriverWait(driver, wait_seconds).until(
+                EC.presence_of_element_located((By.XPATH, xpath))
+            )
+            return "logged_in"
+        except Exception:
+            continue
+
+    # Check if QR screen
+    for xpath in QR_SCREEN_XPATHS:
+        try:
+            WebDriverWait(driver, 2).until(
+                EC.presence_of_element_located((By.XPATH, xpath))
+            )
+            return "qr_screen"
+        except Exception:
+            continue
+
+    return "loading"
+
+
+def _clean_qr_file():
+    """Remove the QR code screenshot if it exists."""
+    qr_path = os.path.join(SCREENSHOT_DIR, "QR_CODE.png")
+    if os.path.exists(qr_path):
+        try:
+            os.remove(qr_path)
+        except Exception:
+            pass
+
+
+def smart_login(timeout: int = 300) -> bool:
+    """
+    Smart login handler:
+    - If session exists in Chrome profile → try auto-login first (fast path).
+    - If WhatsApp shows QR screen → save QR_CODE.png every 5s until scanned.
+    - Returns True when fully logged in, False on timeout.
+    """
+    from selenium.webdriver.common.by import By
+    from selenium.webdriver.support.ui import WebDriverWait
+    from selenium.webdriver.support import expected_conditions as EC
+
+    os.makedirs(SCREENSHOT_DIR, exist_ok=True)
+
     logger.info("Navigating to WhatsApp Web...")
     driver.get("https://web.whatsapp.com")
 
-    logger.info(f"Waiting for WhatsApp login (up to {timeout}s)...")
-    if not HEADLESS:
-        logger.info("")
-        logger.info("╔════════════════════════════════════════════════╗")
-        logger.info("║  SCAN THE QR CODE IN THE BROWSER WINDOW NOW!  ║")
-        logger.info("╚════════════════════════════════════════════════╝")
-        logger.info("")
+    # Give the page a moment to settle
+    time.sleep(3)
+
+    session_exists = has_existing_session()
+
+    if session_exists:
+        logger.info("📂 Existing session detected — attempting auto-login...")
+        logger.info("   (No QR scan needed if your session is still valid)")
+    else:
+        logger.info("🆕 No existing session found — QR scan required.")
 
     deadline = time.time() + timeout
+    last_qr_save = 0
+    qr_phase_announced = False
+    auto_login_announced = False
+    state = "loading"
+
     while time.time() < deadline:
-        for xpath in LOADED_XPATHS:
-            try:
-                WebDriverWait(driver, 3).until(
-                    EC.presence_of_element_located((By.XPATH, xpath))
-                )
-                logger.info("✅ WhatsApp Web logged in successfully!")
-                save_screenshot("login_success")
-                return True
-            except Exception:
-                continue
-    logger.error("❌ WhatsApp login timed out.")
+        state = _check_login_state(wait_seconds=3)
+
+        if state == "logged_in":
+            logger.info("")
+            logger.info("✅ WhatsApp Web is LOGGED IN!")
+            if session_exists:
+                logger.info("   Auto-login successful — no QR scan was needed.")
+            else:
+                logger.info("   QR code scanned successfully.")
+            logger.info("")
+            _clean_qr_file()
+            save_screenshot("login_success")
+            return True
+
+        elif state == "qr_screen":
+            if not qr_phase_announced:
+                qr_phase_announced = True
+                logger.info("")
+                logger.info("╔══════════════════════════════════════════════════════╗")
+                logger.info("║         📱  WHATSAPP LOGIN REQUIRED                 ║")
+                logger.info("╠══════════════════════════════════════════════════════╣")
+                logger.info("║  1. Open the 'screenshots' folder in your agent dir ║")
+                logger.info("║  2. Open the 'QR_CODE.png' file                     ║")
+                logger.info("║  3. In WhatsApp on your phone:                      ║")
+                logger.info("║     Settings → Linked Devices → Link a Device       ║")
+                logger.info("║  4. Scan the QR code with your phone camera         ║")
+                logger.info("║                                                      ║")
+                logger.info("║  The QR code refreshes every ~20 seconds.           ║")
+                logger.info("║  This file is updating automatically.               ║")
+                logger.info("╚══════════════════════════════════════════════════════╝")
+                logger.info("")
+
+            # Save QR screenshot every 5 seconds
+            if time.time() - last_qr_save > 5:
+                try:
+                    driver.save_screenshot(os.path.join(SCREENSHOT_DIR, "QR_CODE.png"))
+                    last_qr_save = time.time()
+                except Exception:
+                    pass
+
+        else:  # still loading
+            if session_exists and not auto_login_announced:
+                auto_login_announced = True
+                logger.info("   Page is loading... checking for session restore...")
+            time.sleep(1)
+
+    # Timed out
+    logger.error("❌ WhatsApp login timed out after %ds.", timeout)
     save_screenshot("login_timeout")
+    _clean_qr_file()
     return False
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+#  SEND MESSAGE
+# ══════════════════════════════════════════════════════════════════════════════
+
+def is_still_logged_in() -> bool:
+    """Quick check if WhatsApp Web is still showing the chat interface."""
+    state = _check_login_state(wait_seconds=3)
+    return state == "logged_in"
 
 
 def send_whatsapp_message(phone: str, message: str) -> bool:
@@ -221,7 +364,7 @@ def send_whatsapp_message(phone: str, message: str) -> bool:
         deadline = time.time() + 40
         loaded = False
         while time.time() < deadline:
-            for xpath in LOADED_XPATHS:
+            for xpath in LOGGED_IN_XPATHS:
                 try:
                     WebDriverWait(driver, 3).until(
                         EC.presence_of_element_located((By.XPATH, xpath))
@@ -347,7 +490,6 @@ def main():
     print("╠══════════════════════════════════════════════════════╣")
     print(f"║   Client ID : {CLIENT_ID:<38} ║")
     print(f"║   Backend   : {BACKEND_URL:<38} ║")
-    print(f"║   Headless  : {str(HEADLESS):<38} ║")
     print(f"║   Poll Rate : {str(POLL_INTERVAL) + 's':<38} ║")
     print("╚══════════════════════════════════════════════════════╝")
     print()
@@ -367,17 +509,29 @@ def main():
     # Step 2: Initialize browser
     init_browser()
 
-    # Step 3: Wait for WhatsApp login
-    if not wait_for_wa_login(timeout=300):
+    # Step 3: Smart login — auto if session exists, QR if not
+    if not smart_login(timeout=300):
         logger.error("WhatsApp login failed. Please restart and scan QR code.")
         sys.exit(1)
 
     # Step 4: Main polling loop
-    logger.info("Entering polling loop — waiting for tasks...")
+    logger.info("🚀 Entering polling loop — waiting for tasks...")
     heartbeat_counter = 0
+    session_check_counter = 0
 
     while running:
         try:
+            # Periodically verify we're still logged in (every 10 polls)
+            session_check_counter += 1
+            if session_check_counter >= 10:
+                session_check_counter = 0
+                if not is_still_logged_in():
+                    logger.warning("⚠️  WhatsApp session appears to have expired!")
+                    logger.warning("    Re-running smart login...")
+                    if not smart_login(timeout=300):
+                        logger.error("Re-login failed. Exiting.")
+                        sys.exit(1)
+
             # Session limit check — restart browser to avoid WhatsApp ban
             if msg_count >= MAX_MESSAGES:
                 logger.warning(f"Session limit ({MAX_MESSAGES}) reached. Restarting browser...")
@@ -388,7 +542,7 @@ def main():
                 msg_count = 0
                 time.sleep(5)
                 init_browser()
-                wait_for_wa_login(timeout=60)
+                smart_login(timeout=120)
 
             # Poll for tasks
             tasks = poll_tasks()
@@ -398,7 +552,7 @@ def main():
                     break
 
                 task_id = task.get("task_id", "unknown")
-                phone = task.get("phone", "")
+                phone   = task.get("phone", "")
                 message = task.get("message", "")
 
                 if not phone or not message:
@@ -430,6 +584,7 @@ def main():
 
     # Cleanup
     logger.info("Shutting down agent...")
+    _clean_qr_file()
     if driver:
         try:
             driver.quit()

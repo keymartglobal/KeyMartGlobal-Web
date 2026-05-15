@@ -2,6 +2,8 @@ FROM python:3.11-slim
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+        xvfb \
+        xauth \
         chromium \
         chromium-driver \
         fonts-liberation \
@@ -24,7 +26,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY worker.py .
 COPY config.json .
+COPY entrypoint.sh .
+RUN chmod +x entrypoint.sh
 
 RUN mkdir -p /app/chrome-profile /app/screenshots
 
-CMD ["python", "worker.py"]
+ENTRYPOINT ["./entrypoint.sh"]
